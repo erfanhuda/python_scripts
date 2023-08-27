@@ -1,5 +1,7 @@
 import pandas as pd
 import argparse 
+from pathlib import Path
+import win32com.client  as win32
 
 parser = argparse.ArgumentParser()
 
@@ -19,3 +21,16 @@ excel_file_path = f'{args.file}.xlsx'
 
 # Convert CSV to Excel
 convert_csv_to_excel(csv_file_path, excel_file_path)
+
+out_file = Path.cwd() / str(excel_file_path)
+
+# Open up Excel and make it visible
+excel = win32.gencache.EnsureDispatch('Excel.Application')
+excel.Visible = True
+
+# Open up the file
+excel.Workbooks.Open(out_file)
+
+# Wait before closing it
+_ = input("Press enter to close Excel")
+excel.Application.Quit()
