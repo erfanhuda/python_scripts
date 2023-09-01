@@ -90,9 +90,10 @@ def scan_port(ipaddr: str, ports: str) -> None:
         _base_port_scanner(ports)
 
 
-IP_PUBLIC = get_ip_public()
-IP_LOCAL = get_ip_local()
+def main():
+    IP_PUBLIC = get_ip_public()
+    print(IP_PUBLIC)
 
-# print(IP_PUBLIC)
-# print(IP_LOCAL)
-print(get_ip_public_full())
+
+if __name__ == "__main__":
+    main()
