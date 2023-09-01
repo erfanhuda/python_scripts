@@ -1,7 +1,7 @@
 import pandas as pd
 import argparse 
 from pathlib import Path
-import win32com.client  as win32
+import win32com.client.gencache  as app
 
 parser = argparse.ArgumentParser()
 
@@ -25,7 +25,7 @@ convert_csv_to_excel(csv_file_path, excel_file_path)
 out_file = Path.cwd() / str(excel_file_path)
 
 # Open up Excel and make it visible
-excel = win32.gencache.EnsureDispatch('Excel.Application')
+excel = app.EnsureDispatch('Excel.Application')
 excel.Visible = True
 
 # Open up the file
