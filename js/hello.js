@@ -51,4 +51,4 @@ class Windows {
 }
 
 win = new Windows();
-win.execFile();
+win.spawn();
