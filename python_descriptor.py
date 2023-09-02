@@ -58,6 +58,54 @@ class String(Validator):
     def validate(self,value):
         if not isinstance(value, (str)):
             raise TypeError(f"Expected {value!r} to be str")
+        
+class Dimensional(Validator):
+    """Implement the interface class for array matrix with contains of number or float only."""
+    def __init__(self):
+        self.max_value = 3
+
+    def two_dimensional(self, value):
+        try:
+            size = {"x": None, "y": None}
+            for i in value:
+                size["y"] = len(i)
+                for j in i:
+                    size["x"] = len(j)
+            
+            return True
+        
+        except ValueError as e:
+            return False
+
+        except TypeError as e:
+            return False
+    
+    def three_dimensional(self, value):
+        try:
+            size = {"x": None, "y": None, "z": None}
+            for i in value:
+                size["z"] = len(i)
+                for j in i:
+                    size["y"] = len(j)
+                    for k in j:
+                        size["z"] = len(k)
+
+            return True
+        
+        except ValueError as e:
+            return False
+        
+        except TypeError as e:
+            return False
+
+    
+    def validate(self, value):
+        if isinstance(value, list):
+            if not self.three_dimensional(value):
+                self.two_dimensional(value)
+            else: 
+                raise TypeError("Value must be either two-dimensional array or three-dimensional array.")
+    
 
 class LoggedAgeAccess:
     """ Descriptor Managed Attributes """
@@ -217,10 +265,43 @@ def unpickle(file):
 
     return obj
 
+
 class Matrix:
-    """Implementing the single matrix object."""
+    """Implementing the matrix object."""
+    array = Dimensional()
     def __init__(self, array=[]):
         self.array = array
+
+    @property
+    def x_size(self):
+        if isinstance(self.array, list):
+            return len(self.array)
+        else: 
+            return 0
+    
+    @property
+    def y_size(self):
+        for item in self.array:
+            if isinstance(item, list):
+                return len(item)
+            else: 
+                return 0
+
+    @property
+    def z_size(self):
+        for i in self.array:
+            for j in i:
+                if isinstance(j, list):
+                    return len(j)
+                else: 
+                    return 0
+
+    @property
+    def size(self):
+        return {"x": self.x_size, "y": self.y_size, "z": self.z_size}
+
+    def __len__(self):
+        return len(self.array)
 
     def __mul__(self, other):
         self.array = [[sum(a * b for a, b in zip(A_row, B_col)) for B_col in zip(*self.array)] for A_row in other]
@@ -263,27 +344,9 @@ def m_mult(A, B):
     return [[sum(a * b for a, b in zip(A_row, B_col)) for B_col in zip(*B)] for A_row in A]
 
 def main():
-    matrix = [[1,3,3,4], [2,2,2,2], [3,3,3,3], [4,4,4,4]]
-    matrix2 = [[1,3,3], [2,2,2], [3,3,3], [4,4,4]]
-    for item in matrix:
-        print(item)
-
-    print("="*12)
-
-    t = m_transpose(matrix)
-    for item in matrix2:
-        print(item)
-
-    print("="*12)
-
-    m = m_mult(matrix, matrix2)
-    for item in m:
-        print(item)
-
-    m1 = Matrix([[1,3,3,4], [2,2,2,2], [3,3,3,3], [4,4,4,4]])
-    m2 = Matrix([[1,3,3], [2,2,2], [3,3,3], [4,4,4]])
-    m3 = m1 * m2
-    print(m3)
+    m1 = Matrix([[[1,3,3,4], [2,2,2,2], [3,3,3,3], [4,4,4,4]],[[1,3,3,4], [2,2,2,2], [3,3,3,3], [4,4,4,4]]])
+    m2 = Matrix([[1,3,3,4], [2,2,2,2], [3,3,3,1]])
+    print(m1, "\n", m2.size)
 
 
 if "__main__" == __name__:
