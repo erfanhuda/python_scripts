@@ -2,8 +2,7 @@ import os
 import logging
 from abc import ABC, abstractmethod
 from functools import wraps
-logging.basicConfig(level=logging.INFO)
-
+from sys import getsizeof
 
 class DirectorySize:
     """ Descriptor Dynamic Lookups"""
@@ -154,26 +153,13 @@ class Age:
     def validate(self, value):
         pass
 
-class Logger:
-    def __init__(self, func):
-        self.func = func
-
-    def __call__(self):
-        import timeit
-
-        t1 = timeit.timeit()
-        self.func()
-        t2 = timeit.timeit() - t1
-
-        print("The function {} took time {}".format(self.func.__name__, t2))
-
 def logger(func):
     import logging
 
     @wraps(func)
-    def wrapper():
+    def wrapper(*args, **kwargs):
         logging.basicConfig(level=logging.INFO, format='%levelname)')
-        func()
+        func(*args, **kwargs)
         
     return wrapper
 
@@ -181,19 +167,123 @@ def timer(func):
     import timeit
 
     @wraps(func)
-    def wrapper():
+    def wrapper(*args, **kwargs):
         t1 = timeit.timeit()
-        func()
+        func(*args, **kwargs)
         t2 = timeit.timeit() - t1
 
-        print("The function {} took time {}".format(func.__name__, t2))
+        return t2
+    return wrapper
+
+
+def retry(func):
+    import time
+    max_retries = 10
+
+    @wraps
+    def wrapper(*args, **kwargs):
+        for t in range(max_retries):
+            try:
+                time.sleep(0.3)
+                func(*args, **kwargs)
+                break
+            except BaseException:
+                continue
 
     return wrapper
 
-@logger
+def enpickle(obj, file):
+    import pickle
+    import timeit
+
+    t1 = timeit.timeit()
+    with open(file, "wb") as f:
+        pickle.dump(obj, f, protocol=pickle.HIGHEST_PROTOCOL)
+    t2 = timeit.timeit() - t1
+
+    print("Successfully pickling the object \"{}\" in file \"{}\" running in {}secs".format(obj,file, t2))
+
+
+def unpickle(file):
+    import pickle
+    import timeit
+
+    t1 = timeit.timeit()
+    with open(file, "rb") as f:
+        obj = pickle.load(f)
+    t2 = timeit.timeit() - t1
+
+    print("Successfully unpickle the file \"{}\" running in {}secs".format(file, t2))
+
+    return obj
+
+class Matrix:
+    """Implementing the single matrix object."""
+    def __init__(self, array=[]):
+        self.array = array
+
+    def __mul__(self, other):
+        self.array = [[sum(a * b for a, b in zip(A_row, B_col)) for B_col in zip(*self.array)] for A_row in other]
+
+    def __iter__(self):
+        return self.array
+    
+    def __transpose__(self):
+        return [[row[i] for row in self.array] for i in range(0,len(self.array))]
+
+    def __str__(self):
+        return "{}".format(str(self.array).replace("],", "],\n"))
+        
+
+class Point:
+    """Implementing the point data types"""
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    
+    def __add__(self, other):
+        return Point(self.x + other.x, self.y + other.y)
+    
+    def __sub__(self, other):
+        return Point(self.x - other.x, self.y - other.y)
+    
+    def __mul__(self, other):
+        return Point(self.x * other.x, self.y * other.y)
+
+    def __div__(self, other):
+        return Point(self.x / other.x, self.y / other.y)
+    
+    def __str__(self):
+        return f"Point({self.x}, {self.y})"
+
+def m_transpose(matrix):
+    return [[row[i] for row in matrix] for i in range(0,len(matrix))]
+
+def m_mult(A, B):
+    return [[sum(a * b for a, b in zip(A_row, B_col)) for B_col in zip(*B)] for A_row in A]
+
 def main():
-    age = Age("Erfan")
-    print(age.name)
+    matrix = [[1,3,3,4], [2,2,2,2], [3,3,3,3], [4,4,4,4]]
+    matrix2 = [[1,3,3], [2,2,2], [3,3,3], [4,4,4]]
+    for item in matrix:
+        print(item)
+
+    print("="*12)
+
+    t = m_transpose(matrix)
+    for item in matrix2:
+        print(item)
+
+    print("="*12)
+
+    m = m_mult(matrix, matrix2)
+    for item in m:
+        print(item)
+
+    m1 = Matrix([[1,3,3,4], [2,2,2,2], [3,3,3,3], [4,4,4,4]])
+    m2 = Matrix([[1,3,3], [2,2,2], [3,3,3], [4,4,4]])
+    m3 = m1 * m2
+    print(m3)
 
 
 if "__main__" == __name__:
