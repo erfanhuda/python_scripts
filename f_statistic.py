@@ -64,11 +64,14 @@ def forecast_arima(data, n=None):
 """ THE REAL IMPLEMENTATION OF SEABANK """
 """"""
 
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import scipy.special as sp
 import scipy.stats as stats
+import warnings
+
+warnings.filterwarnings("ignore")
+
 
 """ Implement the handling input of MEV variables and combine it. """
 proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
@@ -116,7 +119,6 @@ def generate_plots():
 
     fig.savefig("./file/input/mev/mev_combine.pdf")
     plt.show()
-
 
 """Handling Proxy ODR"""
 
@@ -192,17 +194,14 @@ def transform_se(odrs):
         odr['SE_odr_loan'] = odr['odr_loan'].apply(np.exp).fillna(0)
         odr['SE_odr_client'] = odr['odr_client'].apply(np.exp).fillna(0)
 
-# transform_zscore(odrs)
+transform_zscore(odrs)
+# odrs = odrs[:].reset_index(inplace=True)
+# odrs = [odr.reset_index(inplace=True) for odr in odrs]
+# odrs = [odr.rename(columns={"qoq_date":"date"}, inplace=True) for odr in odrs]
 
 """ Handling combination variables Between ODR and MEV"""
-def combine_variables(odrs, mev):
-    result = []
-    for odr in odrs:
-        result.append(pd.concat(odr, mev))
+# print(odrs)
 
-    return result
-
-# variables = combine_variables(odrs, mev_combine).sort_values('Date')
 
 """ Handling ARIMA process"""
 
@@ -216,4 +215,8 @@ def export_odr(odrs):
     for i in range(len(odrs)):
         odrs[i].to_csv(f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
 
-# export_odr(odrs)
+final_odrs = [odr.reset_index() for odr in odrs]
+# variables = [pd.concat([x.add_prefix("Y_"), mev_combine.add_prefix("X_")]) for x in odrs]
+# print(type(odrs), type(mev_combine), variables[0].index)
+print(final_odrs[0]['qoq_date'].rename("date"))
+# export_odr(variables[0][1])
