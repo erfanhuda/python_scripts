@@ -2,6 +2,15 @@ from datetime import datetime, timedelta
 import calendar
 from dateutil.relativedelta import relativedelta
 
+"""CONSTANT DATE"""
+YEAR_ = [1800, 2200]
+TAHUN_ = [x for x in range(YEAR_[0], YEAR_[1])]
+LEAP_YEAR = [1 if (x % 4 == 0) else 0 for x in TAHUN_]
+YEAR = [(TAHUN_[x],LEAP_YEAR[y]) for x in range(len(TAHUN_)) for y in range(len(LEAP_YEAR)) if x == y]
+BULAN = ["JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI", "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"]
+HARI = ["MINGGU", "SENIN", "SELASA", "RABU", "KAMIS", "JUMAT", "SABTU"]
+DAYS_IN_MONTH = [28 if (x == 1) else 31 if (((x < 7) and (x % 2 == 0)) or ((x > 6) and (x % 2 == 1))) else 30 for x in range(len(BULAN))]
+DAYS_IN_YEAR = [(x,y,k) for x in DAYS_IN_MONTH for y in BULAN for (k,v) in YEAR]
 
 def determine_datetime_format(datetime_string):
     # List the formats of date string
