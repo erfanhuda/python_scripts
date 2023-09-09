@@ -1,10 +1,10 @@
 import pandas as pd
 import numpy as np
-import pmdarima as pm
+# import pmdarima as pm
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.tsa.arima.model import ARIMA
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 from abc import ABC, abstractmethod
 from datetime import datetime
@@ -146,9 +146,10 @@ class AutoArimaProcedure(InterfaceProcedure):
         return self
 
 
-proc1 = AutoArimaProcedure("../file/input-python.csv", 3).run()
-# print(proc1.result['prediction'])
-print(proc1.result['model'])
+# proc1 = AutoArimaProcedure("../file/input-python.csv", 3).run()
+# # print(proc1.result['prediction'])
+# print(proc1.result['model'])
 
-pd.DataFrame(proc1.result['prediction']).to_csv("../file/output-python.csv", sep=",", header=False)
-# pd.DataFrame(proc1.result['model']).to_csv("../file/output-model.csv", sep=",", header=False)
+# pd.DataFrame(proc1.result['prediction']).to_csv("../file/output-python.csv", sep=",", header=False)
+# # pd.DataFrame(proc1.result['model']).to_csv("../file/output-model.csv", sep=",", header=False)
+
