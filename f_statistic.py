@@ -2,8 +2,8 @@ import pandas as pd
 import numpy as np
 import pmdarima as pm
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from statsmodels.tsa.stattools import adfuller
-from statsmodels.tsa.arima.model import ARIMA
+import statsmodels.tsa.stattools as st_tools
+import statsmodels.tsa.arima.model as tsa_model
 import matplotlib.pyplot as plt
 
 def split_data(data: list, nrows=0) -> tuple:
@@ -35,7 +35,7 @@ def do_pacf_testing(data, lags):
 
 def do_dicky_fuller_test(data):
     """ADF testing or Augmented Dicky-Fuller to obtain the fitness of data given before ARIMA model step"""
-    adf_test = adfuller(data)
+    adf_test = st_tools.adfuller(data)
     result = {"ADF Statistics": adf_test[0], "p-value": adf_test[1], "Critical Values": [(k, v) for k,v in adf_test[4].items()]}
     return result
 
@@ -69,6 +69,7 @@ import matplotlib.pyplot as plt
 import scipy.special as sp
 import scipy.stats as stats
 import warnings
+import json
 
 warnings.filterwarnings("ignore")
 
@@ -79,6 +80,11 @@ config_file = "./file/fl_config.json"
 var_output_dir = "./file/output/var/"
 arima_output_dir = "./file/output/arima/"
 
+""" Implement the JSON load configuration """
+class BaseFile(json.JSONDecoder):
+    def __init__(self):
+        self.config_file = None
+        
 """ Implement the handling input of MEV variables and combine it. """
 proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
 odr = pd.read_csv("./file/input/mev/ODR.csv", index_col=["qoq_date", "pt_date","pd_segment", "tenor"])
@@ -89,7 +95,7 @@ var4 = pd.read_csv("./file/input/mev/UNEMPLOYMENT_202306.csv", index_col="Date",
 var5 = pd.read_csv("./file/input/mev/USDIDR_202306.csv", index_col="Date", parse_dates=True)
 var6 = pd.read_csv("./file/input/mev/SGDIDR_202306.csv", index_col="Date", parse_dates=True)
 
-mev_combine = [var1,var2,var3,var4,var5,var6]
+mev_combine = [var1,var2,var3,var4,var5]
 
 """ Handling missing data """
 def fill_last_value(data):
@@ -199,7 +205,7 @@ def transform_se(odrs):
         odr['SE_odr_loan'] = odr['odr_loan'].apply(np.exp).fillna(0)
         odr['SE_odr_client'] = odr['odr_client'].apply(np.exp).fillna(0)
 
-# transform_zscore(odrs)
+transform_zscore(odrs)
 # odrs = odrs[:].reset_index(inplace=True)
 # odrs = [odr.reset_index(inplace=True) for odr in odrs]
 # odrs = [odr.rename(columns={"qoq_date":"date"}, inplace=True) for odr in odrs]
@@ -223,7 +229,9 @@ def transform_se(odrs):
     2. Independently and Identically Distributed Data
     3. Large Outliers are Unlikely
 """
-
+def mean_absolute_percentage_error(y_true, y_pred): 
+    y_true, y_pred = np.array(y_true), np.array(y_pred)
+    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
 
 """ Handling Time Series Forecast.
 Forecast Techniques:
@@ -239,7 +247,6 @@ Forecast Techniques:
     10. Simple Exponential Smoothing (SES)
     11. Holt Winter\'s Exponential Smoothing (HWES)
 """
-
 def AutoRegression():
     from statsmodels.tsa.ar_model import AutoReg
     from random import random
@@ -419,5 +426,20 @@ def export_odr(odrs):
 # print(type(odrs), type(mev_combine), variables[0].index)
 # final_odrs[0]['qoq_date'].rename("date")
 # mev_combine['CPI_Lag3Q'] = mev_combine['CPI'].shift(3)
-print(odrs)
+
+prep_odr = odrs[0]['zs_odr_balance'].reset_index()[['qoq_date', 'zs_odr_balance']].set_index(['qoq_date']).squeeze()
+adf = st_tools.adfuller(prep_odr)
+adf_test = pm.arima.stationarity.ADFTest()
+p_val, should_diff = adf_test.should_diff()
+
+
+
+acf = st_tools.acf(prep_odr)
+pacf = st_tools.pacf(prep_odr)
+kpss = st_tools.kpss(prep_odr)
+model = tsa_model.ARIMA(prep_odr,order=(0,0,1))
+
+model_fit = model.fit()
+yhat = model_fit.predict(len(prep_odr), len(prep_odr), typ='levels')
+print(adf)
 # mev_combine.to_csv(f"./file/input/mev_test.csv", mode="w")

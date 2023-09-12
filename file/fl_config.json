@@ -43,10 +43,12 @@
             "plot": true,
             "log": true,
             "method": "",
-            "stepwise": [],
-            "direct": false,
-            "hist_period": ["31-Jan-2023","31-May-2023"],
-            "fcst_period": ["30-Jun-2023","31-Aug-2050"],
+            "config": {
+                "fitted_model": [],
+                "range_fitted": [[0,0,0], [9,9,9]],
+                "training": ["31-Jan-2023","31-May-2023"],
+                "test": ["30-Jun-2023","31-Aug-2050"]
+            },
             "parameters": {
                 "p_value": "0.05"
             }
