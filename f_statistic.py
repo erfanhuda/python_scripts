@@ -83,7 +83,7 @@ var4 = pd.read_csv("./file/input/mev/UNEMPLOYMENT_202306.csv", index_col="Date",
 var5 = pd.read_csv("./file/input/mev/USDIDR_202306.csv", index_col="Date", parse_dates=True)
 var6 = pd.read_csv("./file/input/mev/SGDIDR_202306.csv", index_col="Date", parse_dates=True)
 
-mev_combine = [var3]
+mev_combine = [var1,var2,var3,var4,var5,var6]
 
 """ Handling missing data """
 def fill_last_value(data):
@@ -221,6 +221,5 @@ def export_odr(odrs):
 # print(type(odrs), type(mev_combine), variables[0].index)
 # final_odrs[0]['qoq_date'].rename("date")
 # mev_combine['CPI_Lag3Q'] = mev_combine['CPI'].shift(3)
-
 print(mev_combine)
 # mev_combine.to_csv(f"./file/input/mev_test.csv", mode="w")
