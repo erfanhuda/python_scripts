@@ -83,7 +83,7 @@ var4 = pd.read_csv("./file/input/mev/UNEMPLOYMENT_202306.csv", index_col="Date",
 var5 = pd.read_csv("./file/input/mev/USDIDR_202306.csv", index_col="Date", parse_dates=True)
 var6 = pd.read_csv("./file/input/mev/SGDIDR_202306.csv", index_col="Date", parse_dates=True)
 
-mev_combine = [var1, var2, var3, var4, var5, var6]
+mev_combine = [var3]
 
 """ Handling missing data """
 def fill_last_value(data):
@@ -194,7 +194,7 @@ def transform_se(odrs):
         odr['SE_odr_loan'] = odr['odr_loan'].apply(np.exp).fillna(0)
         odr['SE_odr_client'] = odr['odr_client'].apply(np.exp).fillna(0)
 
-transform_zscore(odrs)
+# transform_zscore(odrs)
 # odrs = odrs[:].reset_index(inplace=True)
 # odrs = [odr.reset_index(inplace=True) for odr in odrs]
 # odrs = [odr.rename(columns={"qoq_date":"date"}, inplace=True) for odr in odrs]
@@ -215,8 +215,12 @@ def export_odr(odrs):
     for i in range(len(odrs)):
         odrs[i].to_csv(f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
 
-final_odrs = [odr.reset_index() for odr in odrs]
+# export_odr(variables[0][1])
+# final_odrs = [odr.reset_index() for odr in odrs]
 # variables = [pd.concat([x.add_prefix("Y_"), mev_combine.add_prefix("X_")]) for x in odrs]
 # print(type(odrs), type(mev_combine), variables[0].index)
-print(final_odrs[0]['qoq_date'].rename("date"))
-# export_odr(variables[0][1])
+# final_odrs[0]['qoq_date'].rename("date")
+# mev_combine['CPI_Lag3Q'] = mev_combine['CPI'].shift(3)
+
+print(mev_combine)
+# mev_combine.to_csv(f"./file/input/mev_test.csv", mode="w")
