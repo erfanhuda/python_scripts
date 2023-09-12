@@ -72,6 +72,12 @@ import warnings
 
 warnings.filterwarnings("ignore")
 
+input_mev_file = ["./file/input/mev/CPI_202306.csv", "./file/input/mev/GDP_202306.csv", "./file/input/mev/BI7D_202306.csv", "./file/input/mev/UNEMPLOYMENT_202306.csv", "./file/input/mev/USDIDR_202306.csv", "./file/input/mev/SGDIDR_202306.csv"]
+input_odr_file = "./file/input/mev/ODR.csv"
+proxy_odr_dir = "./file/proxy_odr/"
+config_file = "./file/fl_config.json"
+var_output_dir = "./file/output/var/"
+arima_output_dir = "./file/output/arima/"
 
 """ Implement the handling input of MEV variables and combine it. """
 proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
@@ -121,7 +127,6 @@ def generate_plots():
     plt.show()
 
 """Handling Proxy ODR"""
-
 fill_odr = proxy_odr.iloc[:].ffill()
 
 """Handling ODR """
@@ -202,14 +207,189 @@ def transform_se(odrs):
 """ Handling combination variables Between ODR and MEV"""
 # print(odrs)
 
+""" Handling Time Series Forecast.
+Forecast Techniques:
+    1. Autoregression (AR)
+    2. Moving Average (MA)
+    3. Autoregressive Moving Average (ARMA)
+    4. Autoregressive Integrated Moving Average (ARIMA)
+    5. Seasonal Autoregressive Integrated Moving-Average (SARIMA)
+    6. Seasonal Autoregressive Integrated Moving-Average with Exogenous Regressors (SARIMAX)
+    7. Vector Autoregression (VAR)
+    8. Vector Autoregression Moving-Average (VARMA)
+    9. Vector Autoregression Moving-Average with Exogenous Regressors (VARMAX)
+    10. Simple Exponential Smoothing (SES)
+    11. Holt Winter\'s Exponential Smoothing (HWES)
+"""
 
-""" Handling ARIMA process"""
+def AutoRegression():
+    from statsmodels.tsa.ar_model import AutoReg
+    from random import random
+    # contrived dataset
+    data = [x + random() for x in range(1, 100)]
+    # fit model
+    model = AutoReg(data, lags=1)
+    model_fit = model.fit()
+    # make prediction
+    yhat = model_fit.predict(len(data), len(data))
+    print(yhat)
+
+def MovingAverage():
+    from statsmodels.tsa.arima.model import ARIMA
+    from random import random
+    # contrived dataset
+    data = [x + random() for x in range(1, 100)]
+    # fit model
+    model = ARIMA(data, order=(0, 0, 1))
+    model_fit = model.fit()
+    # make prediction
+    yhat = model_fit.predict(len(data), len(data))
+    print(yhat)
+
+def ARMA():
+    # ARMA example
+    from statsmodels.tsa.arima.model import ARIMA
+    from random import random
+    # contrived dataset
+    data = [random() for x in range(1, 100)]
+    # fit model
+    model = ARIMA(data, order=(2, 0, 1))
+    model_fit = model.fit()
+    # make prediction
+    yhat = model_fit.predict(len(data), len(data))
+    print(yhat)
+
+def ARIMA():
+    # ARIMA example
+    from statsmodels.tsa.arima.model import ARIMA
+    from random import random
+    # contrived dataset
+    data = [x + random() for x in range(1, 100)]
+    # fit model
+    model = ARIMA(data, order=(1, 1, 1))
+    model_fit = model.fit()
+    # make prediction
+    yhat = model_fit.predict(len(data), len(data), typ='levels')
+    print(yhat)
+
+def SARIMA():
+    # SARIMA example
+    from statsmodels.tsa.statespace.sarimax import SARIMAX
+    from random import random
+    # contrived dataset
+    data = [x + random() for x in range(1, 100)]
+    # fit model
+    model = SARIMAX(data, order=(1, 1, 1), seasonal_order=(0, 0, 0, 0))
+    model_fit = model.fit(disp=False)
+    # make prediction
+    yhat = model_fit.predict(len(data), len(data))
+    print(yhat)
+
+
+def SARIMAX():
+    # SARIMAX example
+    from statsmodels.tsa.statespace.sarimax import SARIMAX
+    from random import random
+    # contrived dataset
+    data1 = [x + random() for x in range(1, 100)]
+    data2 = [x + random() for x in range(101, 200)]
+    # fit model
+    model = SARIMAX(data1, exog=data2, order=(1, 1, 1), seasonal_order=(0, 0, 0, 0))
+    model_fit = model.fit(disp=False)
+    # make prediction
+    exog2 = [200 + random()]
+    yhat = model_fit.predict(len(data1), len(data1), exog=[exog2])
+    print(yhat)
+
+def VAR():
+    # VAR example
+    from statsmodels.tsa.vector_ar.var_model import VAR
+    from random import random
+    # contrived dataset with dependency
+    data = list()
+    for i in range(100):
+        v1 = i + random()
+        v2 = v1 + random()
+        row = [v1, v2]
+        data.append(row)
+    # fit model
+    model = VAR(data)
+    model_fit = model.fit()
+    # make prediction
+    yhat = model_fit.forecast(model_fit.y, steps=1)
+    print(yhat)
+
+def VARMA():
+    # VARMA example
+    from statsmodels.tsa.statespace.varmax import VARMAX
+    from random import random
+    # contrived dataset with dependency
+    data = list()
+    for i in range(100):
+        v1 = random()
+        v2 = v1 + random()
+        row = [v1, v2]
+        data.append(row)
+    # fit model
+    model = VARMAX(data, order=(1, 1))
+    model_fit = model.fit(disp=False)
+    # make prediction
+    yhat = model_fit.forecast()
+    print(yhat)
+
+def VARMAX():
+    # VARMAX example
+    from statsmodels.tsa.statespace.varmax import VARMAX
+    from random import random
+    # contrived dataset with dependency
+    data = list()
+    for i in range(100):
+        v1 = random()
+        v2 = v1 + random()
+        row = [v1, v2]
+        data.append(row)
+    data_exog = [x + random() for x in range(100)]
+    # fit model
+    model = VARMAX(data, exog=data_exog, order=(1, 1))
+    model_fit = model.fit(disp=False)
+    # make prediction
+    data_exog2 = [[100]]
+    yhat = model_fit.forecast(exog=data_exog2)
+    print(yhat)
+
+def SES():
+    # SES example
+    from statsmodels.tsa.holtwinters import SimpleExpSmoothing
+    from random import random
+    # contrived dataset
+    data = [x + random() for x in range(1, 100)]
+    # fit model
+    model = SimpleExpSmoothing(data)
+    model_fit = model.fit()
+    # make prediction
+    yhat = model_fit.predict(len(data), len(data))
+    print(yhat)
+
+def HWES():
+    # Holt Winter's Exponential Smoothing (HWES) example
+    from statsmodels.tsa.holtwinters import ExponentialSmoothing
+    from random import random
+    # contrived dataset
+    data = [x + random() for x in range(1, 100)]
+    # fit model
+    model = ExponentialSmoothing(data)
+    model_fit = model.fit()
+    # make prediction
+    yhat = model_fit.predict(len(data), len(data))
+    print(yhat)
 
 
 # print(odrs)
 # odrs[2][['odr_balance','zs_odr_balance']].plot(label="ODR", figsize=(10,8))
 # plt.show()
 
+
+""" Handling output operations """
 def export_odr(odrs):
     """ Handling export to file """
     for i in range(len(odrs)):
@@ -221,5 +401,5 @@ def export_odr(odrs):
 # print(type(odrs), type(mev_combine), variables[0].index)
 # final_odrs[0]['qoq_date'].rename("date")
 # mev_combine['CPI_Lag3Q'] = mev_combine['CPI'].shift(3)
-print(mev_combine)
+print(odrs)
 # mev_combine.to_csv(f"./file/input/mev_test.csv", mode="w")

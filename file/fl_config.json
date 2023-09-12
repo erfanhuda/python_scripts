@@ -1,0 +1,82 @@
+{   
+    
+    "test": {
+        "name": "Test 01 Emi",
+        "period": "",
+        "date": "",
+        "in_sample": ["31-Jan-2023","31-May-2023"],
+        "out_sample": ["30-Jun-2023","31-Aug-2023"],
+        "log": true
+    },
+    "file": {
+        "input": {
+            "mev": ["./file/input/mev/CPI_202306.csv", "./file/input/mev/GDP_202306.csv", "./file/input/mev/BI7D_202306.csv", "./file/input/mev/UNEMPLOYMENT_202306.csv", "./file/input/mev/USDIDR_202306.csv", "./file/input/mev/SGDIDR_202306.csv"],
+            "odr": ["./file/input/mev/ODR.csv"],
+            "proxy_odr_dir": "./file/proxy_odr/"
+        },
+        "output_dir": {
+            "output_dir": "",
+            "dirs": {
+                "var_dir": "./file/output/var/",
+                "log_dir": "./file/output/log",
+                "forecast": "./file/output/arima/",
+                "ols": "./file/output/ols/",
+                "regression": "./file/output/ols/"
+            }
+        }
+    },
+    "configuration": {
+        "mev" : {
+            "step": true,
+            "smoothing": "MA",
+            "cleansing": "interpolate",
+            "transformations": ["growth","delta","variance","lag1Q", "lag2Q", "lag3Q", "lag4Q"]
+        },
+        "odr": {
+            "step": true,
+            "name": "",
+            "smoothing": "z-score",
+            "cleansing": "interpolate"
+        },
+        "forecast": {
+            "step":false,
+            "plot": true,
+            "log": true,
+            "method": "",
+            "stepwise": [],
+            "direct": false,
+            "hist_period": ["31-Jan-2023","31-May-2023"],
+            "fcst_period": ["30-Jun-2023","31-Aug-2050"],
+            "parameters": {
+                "p_value": "0.05"
+            }
+        },
+        "vars": {
+            "step": true,
+            "combination": 3,
+            "plot": true,
+            "log": true
+        },
+        "ols": {
+            "step": false,
+            "plot": true,
+            "log": true,
+            "stepwise": [""],
+            "parameters": {
+                "p_value": "0.05",
+                "mape": "0.5",
+                "mse": "0.5"
+            }
+        },
+        "regression": {
+            "step": false,
+            "plot": true,
+            "log": true,
+            "parameters": {
+                "p_value": "0.05",
+                "mape": "0.5",
+                "mse": "0.5"
+            }
+        }
+    }
+}
