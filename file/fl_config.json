@@ -29,14 +29,14 @@
         "mev" : {
             "step": true,
             "smoothing": "MA",
-            "cleansing": "interpolate",
+            "missing_data": "interpolate",
             "transformations": ["growth","delta","variance","lag1Q", "lag2Q", "lag3Q", "lag4Q"]
         },
         "odr": {
             "step": true,
-            "name": "",
+            "name": "odr_balance",
             "smoothing": "z-score",
-            "cleansing": "interpolate"
+            "missing_data": "interpolate"
         },
         "forecast": {
             "step":false,
@@ -51,12 +51,6 @@
                 "p_value": "0.05"
             }
         },
-        "vars": {
-            "step": true,
-            "combination": 3,
-            "plot": true,
-            "log": true
-        },
         "ols": {
             "step": false,
             "plot": true,
@@ -68,8 +62,15 @@
                 "mse": "0.5"
             }
         },
+        "vars": {
+            "step": true,
+            "combination": 3,
+            "plot": true,
+            "log": true
+        },
         "regression": {
             "step": false,
+            "name": "normal",
             "plot": true,
             "log": true,
             "parameters": {
