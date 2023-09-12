@@ -207,6 +207,24 @@ def transform_se(odrs):
 """ Handling combination variables Between ODR and MEV"""
 # print(odrs)
 
+
+""" Handling assumption tests for combined variables 
+    1. Linearity
+    2. Constant Error Variance
+    3. Independent Error Terms
+    4. Normal Errors
+    5. No multi-collinearity between predictors
+    6. Exogeneity
+"""
+
+
+""" Handling OLS assumptions :
+    1. The Error Term has Conditional Mean of Zero
+    2. Independently and Identically Distributed Data
+    3. Large Outliers are Unlikely
+"""
+
+
 """ Handling Time Series Forecast.
 Forecast Techniques:
     1. Autoregression (AR)
