@@ -6,72 +6,19 @@ import statsmodels.tsa.stattools as st_tools
 import statsmodels.tsa.arima.model as tsa_model
 import matplotlib.pyplot as plt
 
-def split_data(data: list, nrows=0) -> tuple:
-    # Split dataset to train set and test set
-    msk = (data.index < len(data)-nrows)
-    df_train = data[msk].copy()
-    df_test = data[~msk].copy()
-
-    return (df_train, df_test)
-
-def do_data_interpolation(data):
-    """Interpolate data in between"""
-    df = data.interpolate()
-    return df
-
-def do_acf_testing(data, lags):
-    """Autocorrelation Function"""
-    acf_org = plot_acf(data, lags=lags)
-    plt.show()
-
-    return acf_org
-
-def do_pacf_testing(data, lags):
-    """ Partial Autocorrelation Function"""
-    pacf_org = plot_pacf(data, lags=lags)
-    plt.show()
-
-    return pacf_org
-
-def do_dicky_fuller_test(data):
-    """ADF testing or Augmented Dicky-Fuller to obtain the fitness of data given before ARIMA model step"""
-    adf_test = st_tools.adfuller(data)
-    result = {"ADF Statistics": adf_test[0], "p-value": adf_test[1], "Critical Values": [(k, v) for k,v in adf_test[4].items()]}
-    return result
-
-def manual_arima_test(data, p, d, q):
-    """Perform MANUAL ARIMA by set p, q, d"""
-    model = ARIMA(data, order=(p,d,q))
-    model_fit = model.fit()
-    model_fit.summary()
-
-def auto_arima_test(data):
-    """Perform AUTO ARIMA ordering and tests ARIMA"""
-    auto_arima = pm.auto_arima(data, trace=True, step=True, seasonal=True, with_intercept=True)
-    return (auto_arima, auto_arima.summary())
-
-def forecast_arima(data, n=None):    
-    """Perform forecast"""
-    if n is None:
-        n = len(data)
-    
-    forecast_auto = data.predict(n_periods=len(n))
-    data['forecast_auto'] = [None] * len(data) + list(forecast_auto)
-
-    return data['forecast_auto']
-
-""""""
-""" THE REAL IMPLEMENTATION OF SEABANK """
-""""""
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import scipy.special as sp
 import scipy.stats as stats
 import warnings
 import json
+import logging
 
+""""""
+""" THE REAL IMPLEMENTATION OF SEABANK """
+""""""
 warnings.filterwarnings("ignore")
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
 
 input_mev_file = ["./file/input/mev/CPI_202306.csv", "./file/input/mev/GDP_202306.csv", "./file/input/mev/BI7D_202306.csv", "./file/input/mev/UNEMPLOYMENT_202306.csv", "./file/input/mev/USDIDR_202306.csv", "./file/input/mev/SGDIDR_202306.csv"]
 input_odr_file = "./file/input/mev/ODR.csv"
@@ -231,7 +178,11 @@ transform_zscore(odrs)
 """
 def mean_absolute_percentage_error(y_true, y_pred): 
     y_true, y_pred = np.array(y_true), np.array(y_pred)
-    return np.mean(np.abs((y_true - y_pred) / y_true)) * 100
+    mape = np.mean(np.abs((y_true - y_pred) / y_true))
+    mape_rate = mape * 100
+
+    logging.debug(f"MAPE of this model : {mape_rate}")
+    return mape_rate
 
 """ Handling Time Series Forecast.
 Forecast Techniques:
@@ -247,6 +198,67 @@ Forecast Techniques:
     10. Simple Exponential Smoothing (SES)
     11. Holt Winter\'s Exponential Smoothing (HWES)
 """
+import itertools
+
+p = range(10)
+q = range(10)
+d = range(2)
+orders = itertools.product(p, d, q)
+
+logging.debug(f"Total length of orders : {len(list(orders))}")
+
+def split_data(data: list, nrows=0) -> tuple:
+    # Split dataset to train set and test set
+    msk = (data.index < len(data)-nrows)
+    df_train = data[msk].copy()
+    df_test = data[~msk].copy()
+
+    logging.debug(f"Total length of training data model : {len(df_train)}")
+    logging.debug(f"Total length of test data model : {len(df_test)}")
+
+    return (df_train, df_test)
+
+def do_acf_testing(data, lags):
+    """Autocorrelation Function"""
+    acf_org = plot_acf(data, lags=lags)
+    plt.show()
+
+    return acf_org
+
+def do_pacf_testing(data, lags):
+    """ Partial Autocorrelation Function"""
+    pacf_org = plot_pacf(data, lags=lags)
+    plt.show()
+
+    return pacf_org
+
+def do_dicky_fuller_test(data):
+    """ADF testing or Augmented Dicky-Fuller to obtain the fitness of data given before ARIMA model step"""
+    adf_test = st_tools.adfuller(data)
+    result = {"ADF Statistics": adf_test[0], "p-value": adf_test[1], "Critical Values": [(k, v) for k,v in adf_test[4].items()]}
+    return result
+
+def manual_arima_test(data, p, d, q):
+    """Perform MANUAL ARIMA by set p, q, d"""
+    model = ARIMA(data, order=(p,d,q))
+    model_fit = model.fit()
+    model_fit.summary()
+
+def auto_arima_test(data):
+    """Perform AUTO ARIMA ordering and tests ARIMA"""
+    auto_arima = pm.auto_arima(data, trace=True, step=True, seasonal=True, with_intercept=True)
+    return (auto_arima, auto_arima.summary())
+
+def forecast_arima(data, n=None):    
+    """Perform forecast"""
+    if n is None:
+        n = len(data)
+    
+    forecast_auto = data.predict(n_periods=len(n))
+    data['forecast_auto'] = [None] * len(data) + list(forecast_auto)
+
+    return data['forecast_auto']
+
 def AutoRegression():
     from statsmodels.tsa.ar_model import AutoReg
     from random import random
@@ -427,19 +439,19 @@ def export_odr(odrs):
 # final_odrs[0]['qoq_date'].rename("date")
 # mev_combine['CPI_Lag3Q'] = mev_combine['CPI'].shift(3)
 
-prep_odr = odrs[0]['zs_odr_balance'].reset_index()[['qoq_date', 'zs_odr_balance']].set_index(['qoq_date']).squeeze()
-adf = st_tools.adfuller(prep_odr)
-adf_test = pm.arima.stationarity.ADFTest()
-p_val, should_diff = adf_test.should_diff()
+# prep_odr = odrs[0]['zs_odr_balance'].reset_index()[['qoq_date', 'zs_odr_balance']].set_index(['qoq_date']).squeeze()
+# adf = st_tools.adfuller(prep_odr)
+# adf_test = pm.arima.stationarity.ADFTest()
+# p_val, should_diff = adf_test.should_diff()
 
 
 
-acf = st_tools.acf(prep_odr)
-pacf = st_tools.pacf(prep_odr)
-kpss = st_tools.kpss(prep_odr)
-model = tsa_model.ARIMA(prep_odr,order=(0,0,1))
+# acf = st_tools.acf(prep_odr)
+# pacf = st_tools.pacf(prep_odr)
+# kpss = st_tools.kpss(prep_odr)
+# model = tsa_model.ARIMA(prep_odr,order=(0,0,1))
 
-model_fit = model.fit()
-yhat = model_fit.predict(len(prep_odr), len(prep_odr), typ='levels')
-print(adf)
+# model_fit = model.fit()
+# yhat = model_fit.predict(len(prep_odr), len(prep_odr), typ='levels')
+# print(adf)
 # mev_combine.to_csv(f"./file/input/mev_test.csv", mode="w")
