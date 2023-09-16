@@ -2,6 +2,7 @@ from email.policy import default
 import itertools
 from dataclasses import dataclass, field
 from tkinter import N
+from matplotlib.path import Path
 import pandas as pd
 import numpy as np
 import pmdarima as pm
@@ -22,7 +23,7 @@ import datetime
 """ THE REAL IMPLEMENTATION OF SEABANK """
 """"""
 warnings.filterwarnings("ignore")
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - Seabank - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
 
 BASE_CONFIG_FILE = "./file/fl_config.json"
 
@@ -137,69 +138,93 @@ def generate_plots(data):
 """ Handling ODR transformation"""
 def transform_zscore(odrs):
     """ Z-Score for list of ODRS"""
+    logging.info("Running z-score transformation")
     for odr in odrs:
         odr['zs_odr_balance'] = stats.zscore(odr['odr_balance'])
         odr['zs_odr_loan'] = stats.zscore(odr['odr_loan'])
         odr['zs_odr_client'] = stats.zscore(odr['odr_client'])
     # return [x.apply(stats.zscore) for x in odrs]
+    logging.info("Finished extending z-score")
 
 def transform_logit(odrs):
     """ Logit for list of ODRS"""
+    logging.info("Running logit transformation")
     for odr in odrs:
         odr['Logit_odr_balance'] = odr['odr_balance'].apply(sp.logit)
         odr['Logit_odr_loan'] = odr['odr_loan'].apply(sp.logit)
         odr['Logit_odr_client'] = odr['odr_client'].apply(sp.logit)
 
+    logging.info("Finished extending logit")
+    
 def transform_log10(odrs):
     """Transform data to logarithmic base 10"""
+    logging.info("Running logarithmic base 10 transformation")
     for odr in odrs:
         odr['ln_odr_balance'] = np.log10(odr['odr_balance'])
         odr['ln_odr_loan'] = np.log10(odr['odr_loan'])
         odr['ln_odr_client'] = np.log10(odr['odr_client'])
 
+    logging.info("Finished extending logarithmic base 10")
+    
 def transform_log2(odrs):
     """Transform data to logarithmic base 2"""
+    logging.info("Running logarithmic base 2 transformation")
     for odr in odrs:
         odr['ln_odr_balance'] = np.log2(odr['odr_balance'])
         odr['ln_odr_loan'] = np.log2(odr['odr_loan'])
         odr['ln_odr_client'] = np.log2(odr['odr_client'])
+    logging.info("Finished extending logarithmic base 2")
 
 def transform_ln(odrs):
     """Transform data to logarithmic natural"""
+    logging.info("Running logarithmic natural transformation")
     for odr in odrs:
         odr['ln_odr_balance'] = np.log(odr['odr_balance'])
         odr['ln_odr_loan'] = np.log(odr['odr_loan'])
         odr['ln_odr_client'] = np.log(odr['odr_client'])
+    logging.info("Finished extending logarithmic natural")
 
 def transform_sma(odrs, n=12):
     """ Simple Moving Average for list of ODRS"""
+    logging.info("Running simple moving average transformation")
     for odr in odrs:
         odr[f'SMA{n}_odr_balance'] = odr['odr_balance'].rolling(n).mean().fillna(0)
         odr[f'SMA{n}_odr_loan'] = odr['odr_loan'].rolling(n).mean().fillna(0)
         odr[f'SMA{n}_odr_client'] = odr['odr_client'].rolling(n).mean().fillna(0)
-
+    logging.info("Finished extending simple moving average")
+    
 def transform_cma(odrs, n=12):
     """ Cumulative Moving Average for list of ODRS"""
+    logging.info("Running cumulative moving average transformation")
     for odr in odrs:
         odr[f'CMA{n}_odr_balance'] = odr['odr_balance'].expanding(n).mean().fillna(0)
         odr[f'CMA{n}_odr_loan'] = odr['odr_loan'].expanding(n).mean().fillna(0)
         odr[f'CMA{n}_odr_client'] = odr['odr_client'].expanding(n).mean().fillna(0)
+    logging.info("Finished extending cumulative moving average")
 
+    
 def transform_ema(odrs, n=12):
     """ Exponential Moving Average for list of ODRS"""
+    logging.info("Running exponential moving average transformation")
     for odr in odrs:
         odr[f'EMA{n}_odr_balance'] = odr['odr_balance'].ewm(span=n).mean().fillna(0)
         odr[f'EMA{n}_odr_loan'] = odr['odr_loan'].ewm(span=n).mean().fillna(0)
         odr[f'EMA{n}_odr_client'] = odr['odr_client'].ewm(span=n).mean().fillna(0)
+    logging.info("Finished extending exponential moving average")
 
 def transform_se(odrs):
-    """Simple Exponential for ODR"""
+    """ Simple Exponential"""
+    logging.info("Running simple exponential transformation")
+    
     for odr in odrs:
         odr['SE_odr_balance'] = odr['odr_balance'].apply(np.exp).fillna(0)
         odr['SE_odr_loan'] = odr['odr_loan'].apply(np.exp).fillna(0)
         odr['SE_odr_client'] = odr['odr_client'].apply(np.exp).fillna(0)
+    
+    logging.info("Finished extending simple exponential")
 
-def extend_growth(data, t):
+def extend_lag(data, t):
+    logging.info("Extending the lag basis of {}".format(t))
     return data.shift(t)
 
 # odrs = [odr.set_index(['pt_date', 'pd_segment', 'tenor']) for odr in odrs]
@@ -207,21 +232,27 @@ from scipy.stats import kendalltau, pearsonr, spearmanr
 
 """ Handling correlation test """
 def kendall_pval(x, y):
+    logging.info("Running Kendall Tau p_value")
     return kendalltau(x,y)[1]
 
 def pearsonr_pval(x, y):
+    logging.info("Running Pearson p_value {} items".format(len(x)))
     return pearsonr(x, y)[1]
 
 def spearmanr_pval(x, y):
+    logging.info("Running Spearmann p_value")
     return spearmanr(x,y)[1]
 
 def kendall_corr(x, y):
+    logging.info("Running Kendall Tau correlation")
     return kendalltau(x,y)[0]
 
 def pearsonr_corr(x, y):
+    logging.info("Running Pearson correlation {}".format((x,y)))
     return pearsonr(x, y)[0]
 
 def spearmanr_corr(x, y):
+    logging.info("Running Spearmann correlation {}".format((x,y)))
     return spearmanr(x,y)[0]
 
 """ Handling assumption tests for combined variables 
@@ -508,15 +539,33 @@ def export_odr(odrs):
     for i in range(len(odrs)):
         odrs[i].to_csv(f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
 
-def export_corr_and_variables(label, dirs, odrs, corr_odrs, pval_odrs):
+def export_corr_and_variables(label, dirs, odrs, corr_odrs, pval_odrs, types="excel"):
+    
+    if types == "excel":
+        for item in range(len(label)):
+            path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}.xlsx"
 
-    for item in range(len(label)):
-        path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}.xlsx"
+            with pd.ExcelWriter(path) as writer:
+                logging.info("Exporting {}".format(path))
+                odrs[item].to_excel(writer, sheet_name="variables")
+                corr_odrs[item].to_excel(writer, sheet_name="correlation")
+                pval_odrs[item].to_excel(writer, sheet_name="corr_pvalue")
 
-        with pd.ExcelWriter(path) as writer:
-            odrs[item].to_excel(writer, sheet_name="variables")
-            corr_odrs[item].to_excel(writer, sheet_name="correlation")
-            pval_odrs[item].to_excel(writer, sheet_name="corr_pvalue")
+            logging.info("Finished exporting to {}".format(path))
+
+    elif types == "csv":
+        for item in range(len(label)):
+            path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}"
+
+            logging.info("Exporting {}".format(path))
+            odrs[item].to_csv(f"{path}_odrs.csv")
+            corr_odrs[item].to_csv(f"{path}_corr_odrs.csv")
+            pval_odrs[item].to_csv(f"{path}_pval_odrs.csv")
+
+            logging.info("Finished exporting to {}".format(path))
+    
+    else: 
+        raise TypeError("No parameter for file type match.")
 
 # export_odr(variables[0][1])
 # final_odrs = [odr.reset_index() for odr in odrs]
@@ -671,7 +720,7 @@ def mainloop():
 
         corr_odrs = [x.corr() for x in odrs]
         pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
-        # export_corr_and_variables(label=label, dirs=files['dirs'], odrs=odrs, corr_odrs=corr_odrs, pval_odrs=pval_odrs)
+        export_corr_and_variables(label=label, dirs=files['dirs'], odrs=odrs, corr_odrs=corr_odrs, pval_odrs=pval_odrs)
 
         break
 
@@ -680,6 +729,7 @@ def main():
     start_time = datetime.datetime.now()
     logging.info("Script running on {}".format(start_time))
 
+    """ Lies the main runner program """
     mainloop()
 
     end_time = datetime.datetime.now()
