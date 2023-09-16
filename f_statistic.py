@@ -1,6 +1,7 @@
 from email.policy import default
 import itertools
 from dataclasses import dataclass, field
+from tkinter import N
 import pandas as pd
 import numpy as np
 import pmdarima as pm
@@ -15,6 +16,7 @@ import scipy.stats as stats
 import warnings
 import json
 import logging
+import datetime
 
 """"""
 """ THE REAL IMPLEMENTATION OF SEABANK """
@@ -120,14 +122,14 @@ def add_variances(data, k):
     pass
 
 """ Handling plots """
-def generate_plots():
+def generate_plots(data):
     fig, ax = plt.subplots(nrows=6)
-    mev_combine['CPI'].plot(ax=ax[0], title=mev_combine['CPI'].name, color="green")
-    mev_combine['GDP'].plot(ax=ax[1], title=mev_combine['CPI'].name)
-    mev_combine['BI7DR'].plot(ax=ax[2], title=mev_combine["BI7DR"].name)
-    mev_combine['UNEMP'].plot(ax=ax[3], title=mev_combine["UNEMP"].name)
-    mev_combine['USDIDR'].plot(ax=ax[4], title=mev_combine["USDIDR"].name)
-    mev_combine['SGRIDR'].plot(ax=ax[5], title=mev_combine["SGRIDR"].name)
+    data['CPI'].plot(ax=ax[0], title=data['CPI'].name, color="green")
+    data['GDP'].plot(ax=ax[1], title=data['CPI'].name)
+    data['BI7DR'].plot(ax=ax[2], title=data["BI7DR"].name)
+    data['UNEMP'].plot(ax=ax[3], title=data["UNEMP"].name)
+    data['USDIDR'].plot(ax=ax[4], title=data["USDIDR"].name)
+    data['SGRIDR'].plot(ax=ax[5], title=data["SGRIDR"].name)
 
     fig.savefig("./file/input/mev/mev_combine.pdf")
     plt.show()
@@ -197,6 +199,9 @@ def transform_se(odrs):
         odr['SE_odr_loan'] = odr['odr_loan'].apply(np.exp).fillna(0)
         odr['SE_odr_client'] = odr['odr_client'].apply(np.exp).fillna(0)
 
+def extend_growth(data, t):
+    return data.shift(t)
+
 # odrs = [odr.set_index(['pt_date', 'pd_segment', 'tenor']) for odr in odrs]
 from scipy.stats import kendalltau, pearsonr, spearmanr
 
@@ -209,6 +214,15 @@ def pearsonr_pval(x, y):
 
 def spearmanr_pval(x, y):
     return spearmanr(x,y)[1]
+
+def kendall_corr(x, y):
+    return kendalltau(x,y)[0]
+
+def pearsonr_corr(x, y):
+    return pearsonr(x, y)[0]
+
+def spearmanr_corr(x, y):
+    return spearmanr(x,y)[0]
 
 """ Handling assumption tests for combined variables 
     1. Linearity
@@ -488,19 +502,13 @@ def HWES():
     print(yhat)
 
 
-# print(odrs)
-# odrs[2][['odr_balance','zs_odr_balance']].plot(label="ODR", figsize=(10,8))
-# plt.show()
-
-
 """ Handling output operations """
 def export_odr(odrs):
     """ Handling export to file """
     for i in range(len(odrs)):
         odrs[i].to_csv(f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
 
-from openpyxl import load_workbook
-def export_corr_and_variables():
+def export_corr_and_variables(label, dirs, odrs, corr_odrs, pval_odrs):
 
     for item in range(len(label)):
         path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}.xlsx"
@@ -522,7 +530,25 @@ def export_corr_and_variables():
 # adf_test = pm.arima.stationarity.ADFTest()
 # p_val, should_diff = adf_test.should_diff()
 
+class Extension:
+    def __init__(self, t):
+        self._t = t
 
+    def t(self):
+        _d = self._t.split()
+        return _d
+
+    @staticmethod
+    def add_growth(t:str) -> list:
+        pass
+    
+    @staticmethod
+    def add_moving_average(t: str) -> list:
+        pass
+
+    @staticmethod
+    def add_exponential(t: str) -> list:
+        pass
 
 # acf = st_tools.acf(prep_odr)
 # pacf = st_tools.pacf(prep_odr)
@@ -534,76 +560,132 @@ def export_corr_and_variables():
 # print(adf)
 # mev_combine.to_csv(f"./file/input/mev_test.csv", mode="w")
 
-
-""" Implement the JSON load configuration """
-""" Implement the handling input of MEV variables and combine it. """
-""" Parsing the input files/dirs and output files/dirs location """
-with open(BASE_CONFIG_FILE) as f:
-    config_file = json.load(f)
-
-    try:
-        _parse = [item for item in config_file['file'].items()]
-        files = {f"{item[0]}_files": item[1] for item in config_file['file'].items() if isinstance(item[1], list)}
-        dirs = {f"{item[0]}_dir": item[1] for item in config_file['file'].items() if isinstance(item[1], str)}
-
-        for item in _parse:
-            if isinstance(item[1], list): 
-                logging.info("Found file configurations of {}. Setting up {} files".format(item[0], len(item[1])))
-                logging.info("Working files : {}".format(", ".join(item[1])))
-            elif isinstance(item[1], str):
-                logging.info("Found directory configurations of {}. Setting up {} directories".format(item[0], item[1]))
-                logging.info("Working directories : {}".format(item[1]))
-            else:
-                raise TypeError("No files or directories found")
-
-        # logging.info(f"Found working files : {files.keys()} ({len(files)} files). " )
-        # logging.info(f"Found working directories : {dirs.keys()} ({len(dirs)} directories).")
-    except KeyError as e:
-        logging.warning(f"Key configuration for {e} not found")
-
-    except FileNotFoundError as e:
-        logging.error(f"Location in {e} not found. Check again the files or directories in configuration file")
-
-    except BaseException:
-        logging.error("Sorry, cannot setup the configuration files. Please check the input and output section again.")
+@dataclass
+class Extension:
+    name: str
+    config_list: [] = field(default_factory=list)
 
 
-""" Parsing the stepwise and parameters configuration """
-with open(BASE_CONFIG_FILE) as f:
-    config_file = json.load(f)
+# print(x_extension[0])
 
-    try:
-        # _base_parse = [(item[0],item[1]['step']) for item in config_file['configuration'].items()]
-        # base_step = [{f"{item[0]}_config": item[1]} for item in config_file['configuration'].items()]
-        config = [x for x in config_file['configuration'].items()]
-        # print(config)
-
-    except: 
-
-        logging.error("Coba cek lagi section untuk konfigurasi stepwise.")
+def add_extension(x):
+    extension = {k: v for k, v in x.items()}
 
 
-proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
-odr = pd.read_csv(files['odr_files'][0], index_col=["qoq_date", "pt_date","pd_segment", "tenor"],parse_dates=['qoq_date', 'pt_date'])
+class Procedure:
+    def __init__(self):
+        self.command = []
 
-mev_combine = [pd.read_csv(file, low_memory=True, parse_dates=['Date']) for file in files['mev_files']]
-mev_combine = [data.set_index("Date") for data in mev_combine]
-mev_combine = fill_last_value(mev_combine)
-mev_combine = mev_combine.loc[mev_combine.index == mev_combine.index.to_period('M').to_timestamp('M')]
+    def add(self, command):
+        self.command.append(command)
 
-"""Execution Proxy ODR"""
-fill_odr = proxy_odr.iloc[:].ffill()
+    def remove(self, command):
+        self.command.remove(command)
 
-"""Execution ODR """
-group = odr.groupby(level=["pd_segment", "tenor"])
-odrs = [group.get_group(x) for x in group.groups]
 
-"""Execution combination variables Between ODR and MEV"""
-transform_zscore(odrs)
-odrs = [odr.reset_index().set_index('qoq_date') for odr in odrs]
-odrs = [pd.concat([odr, mev_combine], axis=1).ffill().fillna(0) for odr in odrs]
-label = [(odr['pd_segment'].iloc[-1], odr['tenor'].iloc[-1]) for odr in odrs]
-odrs = [x.drop(['pt_date', 'pd_segment', 'tenor'], axis=1) for x in odrs]
-corr_odrs = [x.corr() for x in odrs]
-pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
-export_corr_and_variables()
+def parsing_file_config():
+    """ Implement the JSON load configuration """
+    """ Implement the handling input of MEV variables and combine it. """
+    """ Parsing the input files/dirs and output files/dirs location """
+    with open(BASE_CONFIG_FILE) as f:
+        config_file = json.load(f)
+
+        try:
+            _parse = [item for item in config_file['file'].items()]
+            files = {f"{item[0]}_files": item[1] for item in config_file['file'].items() if isinstance(item[1], list)}
+            dirs = {f"{item[0]}_dir": item[1] for item in config_file['file'].items() if isinstance(item[1], str)}
+
+            for item in _parse:
+                if isinstance(item[1], list): 
+                    logging.info("Found file configurations of {}. Setting up {} files".format(item[0], len(item[1])))
+                    logging.info("Registered files : {}".format(", ".join(item[1])))
+                elif isinstance(item[1], str):
+                    logging.info("Found directory configurations of {}. Setting up {} directories".format(item[0], item[1]))
+                    logging.info("Registered directories : {}".format(item[1]))
+                else:
+                    raise TypeError("No files or directories found")
+
+            return {"files": files, "dirs" : dirs}
+            # logging.info(f"Found working files : {files.keys()} ({len(files)} files). " )
+            # logging.info(f"Found working directories : {dirs.keys()} ({len(dirs)} directories).")
+        except KeyError as e:
+            logging.warning(f"Key configuration for {e} not found")
+
+        except FileNotFoundError as e:
+            logging.error(f"Location in {e} not found. Check again the files or directories in configuration file")
+
+        except BaseException:
+            logging.error("Sorry, cannot setup the configuration files. Please check the input and output section again.")
+
+def parsing_config():
+    """ Parsing the stepwise and parameters configuration """
+    with open(BASE_CONFIG_FILE) as f:
+        config_file = json.load(f)
+
+        try:
+            _config = [x for x in config_file['configuration'].items()]
+            y_base = [y.lower() for y in config_file['configuration']['variable']['y']['base']]
+            x_base = [x.lower() for x in config_file['configuration']['variable']['x']['base']]
+            y_ext = [y.lower() for y in config_file['configuration']['variable']['y']['extend'].keys()]
+            x_ext = [x.lower() for x in config_file['configuration']['variable']['x']['extend'].keys()]
+            y_ext_params = [str(y).lower() for y in config_file['configuration']['variable']['y']['extend'].values()]
+            x_ext_params = [str(x).lower() for x in config_file['configuration']['variable']['x']['extend'].values()]
+            
+            """ List of Transformations Features """
+            _fe = {"growth": "_g", "delta": "_d", "exponential": "_exp", "variance": "_v", "lag": "_lag", "lead": "_lea", "z_score": "_z", "simple_ma": "_sma", "cumulative_ma": "_cma", "exponential_ma": "_ema", "ln": "_ln", "logbase": "_lb", "logit": "_logit"}
+            _fr = {"day": "d", "monthly": "m", "quarterly": "q", "semesterly": "h", "yearly": "y"}
+
+            print(x_ext, x_ext_params)
+
+        except BaseException: 
+            logging.error("Coba cek lagi section untuk konfigurasinya.")
+
+
+def mainloop():
+    while True:
+        files = parsing_file_config()
+        config = parsing_config()
+        # print(x_extension)
+        # print(x_base)
+        proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
+        odr = pd.read_csv(files['files']['odr_files'][0], index_col=["qoq_date", "pt_date","pd_segment", "tenor"],parse_dates=['qoq_date', 'pt_date'])
+
+        mev_combine = [pd.read_csv(file, low_memory=True, parse_dates=['Date']) for file in files['files']['mev_files']]
+        mev_combine = [data.set_index("Date") for data in mev_combine]
+        mev_combine = fill_last_value(mev_combine)
+        mev_combine = mev_combine.loc[mev_combine.index == mev_combine.index.to_period('M').to_timestamp('M')]
+
+        """Execution Proxy ODR"""
+        fill_odr = proxy_odr.iloc[:].ffill()
+
+        """Execution ODR """
+        group = odr.groupby(level=["pd_segment", "tenor"])
+        odrs = [group.get_group(x) for x in group.groups]
+
+        """Execution combination variables Between ODR and MEV"""
+        transform_zscore(odrs)
+        odrs = [odr.reset_index().set_index('qoq_date') for odr in odrs]
+        odrs = [pd.concat([odr, mev_combine], axis=1).ffill().fillna(0) for odr in odrs]
+        label = [(odr['pd_segment'].iloc[-1], odr['tenor'].iloc[-1]) for odr in odrs]
+        odrs = [x.drop(['pt_date', 'pd_segment', 'tenor'], axis=1) for x in odrs]
+
+        corr_odrs = [x.corr() for x in odrs]
+        pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
+        # export_corr_and_variables(label=label, dirs=files['dirs'], odrs=odrs, corr_odrs=corr_odrs, pval_odrs=pval_odrs)
+
+        break
+
+
+def main():
+    start_time = datetime.datetime.now()
+    logging.info("Script running on {}".format(start_time))
+
+    mainloop()
+
+    end_time = datetime.datetime.now()
+    logging.info("Script finished on {}".format(end_time))
+    logging.info("Script running about {}".format(end_time - start_time))
+
+
+if __name__ == "__main__":
+    main()

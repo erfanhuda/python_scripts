@@ -55,16 +55,16 @@ INPUT / OUTPUT FILES AND DIRECTORIES
 ============================================================
 EXTEND VARIABLES FEATURES
 ------------------------------------------------------------
-1. Exponential
-2. Growth -> D, M, Q, Y
-3. Delta -> D, M, Q, Y
-4. Variance -> D, M, Q, Y
-5. Lag -> D, M, Q, Y
-6. Lead -> D, M, Q, Y
-7. z-Score
-8. Logit
-9. Logarithmic Natural
-10. Simple Moving Average
-11. Cumulative Moving Average
-12. Exponential Moving Average 
-13. 
+1. Exponential (exp)
+2. Growth(gr) -> D, M, Q, Y
+3. Delta(d) -> D, M, Q, Y
+4. Variance(v) -> D, M, Q, Y
+5. Lag(lag) -> D, M, Q, Y
+6. Lead(lead) -> D, M, Q, Y
+7. z-Score (z)
+8. Log Base (lb)
+9. Logit (log)
+10. Logarithmic Natural (ln)
+11. Simple Moving Average (sma)
+12. Cumulative Moving Average (cma)
+13. Exponential Moving Average (ema)

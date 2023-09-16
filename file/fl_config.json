@@ -12,13 +12,18 @@
             "combination": 3,
             "y": {
                 "base": ["odr_balance"],
-                "extend": ["z-score"],
+                "extend": {
+                    "z_score": 10
+                },
                 "missing_data": "interpolate",
                 "use": ["base", "extend"]
             },
             "x": {
                 "base": ["cpi", "gdp", "bi7d"],
-                "extend": ["growth","delta","variance","lag1Q", "lag2Q", "lag3Q", "lag4Q"],
+                "extend": {
+                    "growth": 10,
+                    "lag": "1Q"
+                },
                 "missing_data": "interpolate",
                 "use": ["base", "extend"]
             }
@@ -26,23 +31,21 @@
         "forecast_model": {
             "method": "arima",
             "test": [],
-            "y": [],
-            "x": [],
+            "parameters": 0,
             "in_sample": ["31-Jan-2023","31-May-2023"],
             "out_sample": ["30-Jun-2023","31-Aug-2023"]
         },
         "correlation_model": {
             "method": "pearson",
             "test": ["covariance"],
-            "y": [],
-            "x": [],
+            "parameters": 0, 
             "in_sample": ["31-Jan-2023","31-May-2023"],
             "out_sample": ["30-Jun-2023","31-Aug-2023"]
         },
         "regression_model": {
             "method": "linear regression",
             "test": ["autocorrelation", "heteroscedasticity", "normality"],
-            "y": [],
+            "y": ["odr_balance"],
             "x": [],
             "in_sample": ["31-Jan-2023","31-May-2023"],
             "out_sample": ["30-Jun-2023","31-Aug-2023"]
