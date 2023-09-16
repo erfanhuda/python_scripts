@@ -42,3 +42,29 @@ o	ACF gives q.
 3.	Integrated
 o	Intergrated means no of times we difference the data then we have to integrated it back to get the original series back.
 o	We difference to remove trend and seasonality to it stationary series as only after making a series stationary we cam impliment AR and MA.
+
+
+
+============================================================
+INPUT / OUTPUT FILES AND DIRECTORIES
+------------------------------------------------------------
+1. To specify the directory locations use string or use key with "dir"
+2. To specify the files locations use list or use key without "dir" or with "files"
+
+
+============================================================
+EXTEND VARIABLES FEATURES
+------------------------------------------------------------
+1. Exponential
+2. Growth -> D, M, Q, Y
+3. Delta -> D, M, Q, Y
+4. Variance -> D, M, Q, Y
+5. Lag -> D, M, Q, Y
+6. Lead -> D, M, Q, Y
+7. z-Score
+8. Logit
+9. Logarithmic Natural
+10. Simple Moving Average
+11. Cumulative Moving Average
+12. Exponential Moving Average 
+13. 

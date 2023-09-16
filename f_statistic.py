@@ -1,15 +1,17 @@
+from email.policy import default
+import itertools
+from dataclasses import dataclass, field
 import pandas as pd
 import numpy as np
 import pmdarima as pm
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 import statsmodels.tsa.stattools as st_tools
 import statsmodels.tsa.arima.model as tsa_model
-import matplotlib.pyplot as plt
-
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import scipy.special as sp
 import scipy.stats as stats
+
 import warnings
 import json
 import logging
@@ -20,41 +22,92 @@ import logging
 warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
 
-input_mev_file = ["./file/input/mev/CPI_202306.csv", "./file/input/mev/GDP_202306.csv", "./file/input/mev/BI7D_202306.csv", "./file/input/mev/UNEMPLOYMENT_202306.csv", "./file/input/mev/USDIDR_202306.csv", "./file/input/mev/SGDIDR_202306.csv"]
-input_odr_file = "./file/input/mev/ODR.csv"
-proxy_odr_dir = "./file/proxy_odr/"
-config_file = "./file/fl_config.json"
-var_output_dir = "./file/output/var/"
-arima_output_dir = "./file/output/arima/"
+BASE_CONFIG_FILE = "./file/fl_config.json"
 
-""" Implement the JSON load configuration """
-class BaseFile(json.JSONDecoder):
-    def __init__(self):
-        self.config_file = None
+class NodeCommand:
+    def __init__(self, command):
+        self.command = command
+        self.next = None
+
+    def insertAtBegin(self, data):
+        new_node = NodeCommand(data)
+        if self.head is None:
+            self.head = new_node
+            return
+        else:
+            new_node.next = self.head
+            self.head = new_node
+
+    def insertAtIndex(self, data, index):
+        new_node = NodeCommand(data)
+        current_node = self.head
+        position = 0
+        if position == index:
+            self.insertAtBegin(data)
+        else:
+            while(current_node != None and position+1 != index):
+                position = position+1
+                current_node = current_node.next
+ 
+            if current_node != None:
+ 
+                new_node.next = current_node.next
+                current_node.next = new_node
+            else:
+                print("Index not present")
+
+    def inserAtEnd(self, data):
+        new_node = NodeCommand(data)
+        if self.head is None:
+            self.head = new_node
+            return
+    
+        current_node = self.head
+        while(current_node.next):
+            current_node = current_node.next
+    
+        current_node.next = new_node
+
+    def updateNode(self, val, index):
+        current_node = self.head
+        position = 0
+        if position == index:
+            current_node.data = val
+        else:
+            while(current_node != None and position != index):
+                position = position+1
+                current_node = current_node.next
+    
+            if current_node != None:
+                current_node.data = val
+            else:
+                print("Index not present")
+
+    def remove_first_node(self):
+        if(self.head == None):
+            return
         
-""" Implement the handling input of MEV variables and combine it. """
-proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
-odr = pd.read_csv("./file/input/mev/ODR.csv", index_col=["qoq_date", "pt_date","pd_segment", "tenor"])
-var1 = pd.read_csv("./file/input/mev/CPI_202306.csv", index_col="Date", parse_dates=True)
-var2 = pd.read_csv("./file/input/mev/GDP_202306.csv", index_col="Date", parse_dates=True)
-var3 = pd.read_csv("./file/input/mev/BI7D_202306.csv", index_col="Date", parse_dates=True)
-var4 = pd.read_csv("./file/input/mev/UNEMPLOYMENT_202306.csv", index_col="Date", parse_dates=True)
-var5 = pd.read_csv("./file/input/mev/USDIDR_202306.csv", index_col="Date", parse_dates=True)
-var6 = pd.read_csv("./file/input/mev/SGDIDR_202306.csv", index_col="Date", parse_dates=True)
+        self.head = self.head.next
 
-mev_combine = [var1,var2,var3,var4,var5]
+    def remove_last_node(self):
+        if self.head is None:
+            return
+    
+        current_node = self.head
+        while(current_node.next.next):
+            current_node = current_node.next
+    
+        current_node.next = None
 
 """ Handling missing data """
 def fill_last_value(data):
-    return pd.concat(data).sort_values('Date').ffill().fillna(0)
+    return pd.concat(data, axis=1).sort_values('Date').ffill().fillna(0)
 
 def fill_interpolate(data):
-    return pd.concat(data).sort_values('Date').interpolate().fillna(0)
+    return pd.concat(data, axis=1).sort_values('Date').interpolate().fillna(0)
 
 def fill_fwd_value(data):
-    return pd.concat(data).sort_values('Date').bfill().fillna(0)
-
-mev_combine = fill_interpolate(mev_combine)
+    return pd.concat(data, axis=1).sort_values('Date').bfill().fillna(0)
 
 """ Handling MEV Extended Variables """
 def add_growth(data, k):
@@ -78,14 +131,6 @@ def generate_plots():
 
     fig.savefig("./file/input/mev/mev_combine.pdf")
     plt.show()
-
-"""Handling Proxy ODR"""
-fill_odr = proxy_odr.iloc[:].ffill()
-
-"""Handling ODR """
-group = odr.groupby(level=["pd_segment", "tenor"])
-odrs = [group.get_group(x) for x in group.groups]
-
 
 """ Handling ODR transformation"""
 def transform_zscore(odrs):
@@ -152,14 +197,18 @@ def transform_se(odrs):
         odr['SE_odr_loan'] = odr['odr_loan'].apply(np.exp).fillna(0)
         odr['SE_odr_client'] = odr['odr_client'].apply(np.exp).fillna(0)
 
-transform_zscore(odrs)
-# odrs = odrs[:].reset_index(inplace=True)
-# odrs = [odr.reset_index(inplace=True) for odr in odrs]
-# odrs = [odr.rename(columns={"qoq_date":"date"}, inplace=True) for odr in odrs]
+# odrs = [odr.set_index(['pt_date', 'pd_segment', 'tenor']) for odr in odrs]
+from scipy.stats import kendalltau, pearsonr, spearmanr
 
-""" Handling combination variables Between ODR and MEV"""
-# print(odrs)
+""" Handling correlation test """
+def kendall_pval(x, y):
+    return kendalltau(x,y)[1]
 
+def pearsonr_pval(x, y):
+    return pearsonr(x, y)[1]
+
+def spearmanr_pval(x, y):
+    return spearmanr(x,y)[1]
 
 """ Handling assumption tests for combined variables 
     1. Linearity
@@ -169,6 +218,7 @@ transform_zscore(odrs)
     5. No multi-collinearity between predictors
     6. Exogeneity
 """
+
 
 
 """ Handling OLS assumptions :
@@ -198,14 +248,29 @@ Forecast Techniques:
     10. Simple Exponential Smoothing (SES)
     11. Holt Winter\'s Exponential Smoothing (HWES)
 """
-import itertools
+@dataclass
+class Order:
+    p: int = field(default=10)
+    q: int = field(default=10)
+    d: int = field(default=2)
+    m: int = field(default=0)
 
-p = range(10)
-q = range(10)
-d = range(2)
-orders = itertools.product(p, d, q)
+@dataclass
+class TypeOrder:
+    types: str = field(default="ARIMA")
+    order: object = field(init=False,default=Order())
 
-logging.debug(f"Total length of orders : {len(list(orders))}")
+
+def set_orders(types="ARIMA", p=10, d=2, q=10, m=0):
+    p = range(p)
+    q = range(q)
+    d = range(d)
+    m = range(m)
+
+    orders = {"AR": itertools.product(p), "ARMA": itertools.product(p, q), "ARIMA": itertools.product(p,d,q), "SARIMA": itertools.product(p,d,q,m)}
+    logging.debug(f"Total length of orders : {len(list(orders.get(types)))}")
+    
+    return list(orders.get(types))
 
 def split_data(data: list, nrows=0) -> tuple:
     # Split dataset to train set and test set
@@ -258,6 +323,8 @@ def forecast_arima(data, n=None):
     data['forecast_auto'] = [None] * len(data) + list(forecast_auto)
 
     return data['forecast_auto']
+
+
 
 def AutoRegression():
     from statsmodels.tsa.ar_model import AutoReg
@@ -432,6 +499,17 @@ def export_odr(odrs):
     for i in range(len(odrs)):
         odrs[i].to_csv(f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
 
+from openpyxl import load_workbook
+def export_corr_and_variables():
+
+    for item in range(len(label)):
+        path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}.xlsx"
+
+        with pd.ExcelWriter(path) as writer:
+            odrs[item].to_excel(writer, sheet_name="variables")
+            corr_odrs[item].to_excel(writer, sheet_name="correlation")
+            pval_odrs[item].to_excel(writer, sheet_name="corr_pvalue")
+
 # export_odr(variables[0][1])
 # final_odrs = [odr.reset_index() for odr in odrs]
 # variables = [pd.concat([x.add_prefix("Y_"), mev_combine.add_prefix("X_")]) for x in odrs]
@@ -455,3 +533,77 @@ def export_odr(odrs):
 # yhat = model_fit.predict(len(prep_odr), len(prep_odr), typ='levels')
 # print(adf)
 # mev_combine.to_csv(f"./file/input/mev_test.csv", mode="w")
+
+
+""" Implement the JSON load configuration """
+""" Implement the handling input of MEV variables and combine it. """
+""" Parsing the input files/dirs and output files/dirs location """
+with open(BASE_CONFIG_FILE) as f:
+    config_file = json.load(f)
+
+    try:
+        _parse = [item for item in config_file['file'].items()]
+        files = {f"{item[0]}_files": item[1] for item in config_file['file'].items() if isinstance(item[1], list)}
+        dirs = {f"{item[0]}_dir": item[1] for item in config_file['file'].items() if isinstance(item[1], str)}
+
+        for item in _parse:
+            if isinstance(item[1], list): 
+                logging.info("Found file configurations of {}. Setting up {} files".format(item[0], len(item[1])))
+                logging.info("Working files : {}".format(", ".join(item[1])))
+            elif isinstance(item[1], str):
+                logging.info("Found directory configurations of {}. Setting up {} directories".format(item[0], item[1]))
+                logging.info("Working directories : {}".format(item[1]))
+            else:
+                raise TypeError("No files or directories found")
+
+        # logging.info(f"Found working files : {files.keys()} ({len(files)} files). " )
+        # logging.info(f"Found working directories : {dirs.keys()} ({len(dirs)} directories).")
+    except KeyError as e:
+        logging.warning(f"Key configuration for {e} not found")
+
+    except FileNotFoundError as e:
+        logging.error(f"Location in {e} not found. Check again the files or directories in configuration file")
+
+    except BaseException:
+        logging.error("Sorry, cannot setup the configuration files. Please check the input and output section again.")
+
+
+""" Parsing the stepwise and parameters configuration """
+with open(BASE_CONFIG_FILE) as f:
+    config_file = json.load(f)
+
+    try:
+        # _base_parse = [(item[0],item[1]['step']) for item in config_file['configuration'].items()]
+        # base_step = [{f"{item[0]}_config": item[1]} for item in config_file['configuration'].items()]
+        config = [x for x in config_file['configuration'].items()]
+        # print(config)
+
+    except: 
+
+        logging.error("Coba cek lagi section untuk konfigurasi stepwise.")
+
+
+proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
+odr = pd.read_csv(files['odr_files'][0], index_col=["qoq_date", "pt_date","pd_segment", "tenor"],parse_dates=['qoq_date', 'pt_date'])
+
+mev_combine = [pd.read_csv(file, low_memory=True, parse_dates=['Date']) for file in files['mev_files']]
+mev_combine = [data.set_index("Date") for data in mev_combine]
+mev_combine = fill_last_value(mev_combine)
+mev_combine = mev_combine.loc[mev_combine.index == mev_combine.index.to_period('M').to_timestamp('M')]
+
+"""Execution Proxy ODR"""
+fill_odr = proxy_odr.iloc[:].ffill()
+
+"""Execution ODR """
+group = odr.groupby(level=["pd_segment", "tenor"])
+odrs = [group.get_group(x) for x in group.groups]
+
+"""Execution combination variables Between ODR and MEV"""
+transform_zscore(odrs)
+odrs = [odr.reset_index().set_index('qoq_date') for odr in odrs]
+odrs = [pd.concat([odr, mev_combine], axis=1).ffill().fillna(0) for odr in odrs]
+label = [(odr['pd_segment'].iloc[-1], odr['tenor'].iloc[-1]) for odr in odrs]
+odrs = [x.drop(['pt_date', 'pd_segment', 'tenor'], axis=1) for x in odrs]
+corr_odrs = [x.corr() for x in odrs]
+pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
+export_corr_and_variables()
