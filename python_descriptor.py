@@ -1,3 +1,4 @@
+from collections import Counter
 import os
 import logging
 from abc import ABC, abstractmethod
@@ -61,50 +62,14 @@ class String(Validator):
         
 class Dimensional(Validator):
     """Implement the interface class for array matrix with contains of number or float only."""
-    def __init__(self):
-        self.max_value = 3
 
-    def two_dimensional(self, value):
-        try:
-            size = {"x": None, "y": None}
-            for i in value:
-                size["y"] = len(i)
-                for j in i:
-                    size["x"] = len(j)
-            
-            return True
-        
-        except ValueError as e:
-            return False
-
-        except TypeError as e:
-            return False
-    
-    def three_dimensional(self, value):
-        try:
-            size = {"x": None, "y": None, "z": None}
-            for i in value:
-                size["z"] = len(i)
-                for j in i:
-                    size["y"] = len(j)
-                    for k in j:
-                        size["z"] = len(k)
-
-            return True
-        
-        except ValueError as e:
-            return False
-        
-        except TypeError as e:
-            return False
-
-    
     def validate(self, value):
-        if isinstance(value, list):
-            if not self.three_dimensional(value):
-                self.two_dimensional(value)
-            else: 
-                raise TypeError("Value must be either two-dimensional array or three-dimensional array.")
+        length = []
+        for i, row in enumerate(value):
+            length.append({"col": len(row)})
+
+        if not all(x == length[0] for x in length):
+            raise TypeError(f"Cannot build the matrix. Expected same length column.")
     
 
 class LoggedAgeAccess:
@@ -273,32 +238,16 @@ class Matrix:
         self.array = array
 
     @property
-    def x_size(self):
-        if isinstance(self.array, list):
-            return len(self.array)
-        else: 
-            return 0
+    def length(self):
+        length = []
+        for i, row in enumerate(self.array):
+            length.append({"row": i + 1, f"col_length": len(row)})
+        
+        return length
     
     @property
-    def y_size(self):
-        for item in self.array:
-            if isinstance(item, list):
-                return len(item)
-            else: 
-                return 0
-
-    @property
-    def z_size(self):
-        for i in self.array:
-            for j in i:
-                if isinstance(j, list):
-                    return len(j)
-                else: 
-                    return 0
-
-    @property
-    def size(self):
-        return {"x": self.x_size, "y": self.y_size, "z": self.z_size}
+    def dimension(self):
+        return "{} X {}".format(self.length[-1]['row'], self.length[-1]['col_length'])
 
     def __len__(self):
         return len(self.array)
@@ -308,6 +257,12 @@ class Matrix:
 
     def __iter__(self):
         return self.array
+
+    def __getitem__(self, idx):
+        return self.array[idx]
+    
+    def __setitem__(self, idx, val):
+        self.array[idx] = val
     
     def __transpose__(self):
         return [[row[i] for row in self.array] for i in range(0,len(self.array))]
@@ -315,7 +270,6 @@ class Matrix:
     def __str__(self):
         return "{}".format(str(self.array).replace("],", "],\n"))
         
-
 class Point:
     """Implementing the point data types"""
     def __init__(self, x, y):
@@ -343,10 +297,15 @@ def m_transpose(matrix):
 def m_mult(A, B):
     return [[sum(a * b for a, b in zip(A_row, B_col)) for B_col in zip(*B)] for A_row in A]
 
+
+def same_property(items):
+    return all(x == items[0] for x in items)
+
 def main():
-    m1 = Matrix([[[1,3,3,4], [2,2,2,2], [3,3,3,3], [4,4,4,4]],[[1,3,3,4], [2,2,2,2], [3,3,3,3], [4,4,4,4]]])
-    m2 = Matrix([[1,3,3,4], [2,2,2,2], [3,3,3,1]])
-    print(m1, "\n", m2.size)
+    m1 = Matrix([[1,3,3,4], [2,2,2,1], [3,3,3,3], [4,4,4,4]])
+    m2 = Matrix([[1,3,3,4], [2,2,2,1,0], [3,3,3,3,4]])
+
+    print(m1.dimension)
 
 
 if "__main__" == __name__:
