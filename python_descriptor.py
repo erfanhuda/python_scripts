@@ -5,6 +5,8 @@ from abc import ABC, abstractmethod
 from functools import wraps
 from sys import getsizeof
 
+from custom_data_types import Matrix
+
 class DirectorySize:
     """ Descriptor Dynamic Lookups"""
     def __get__(self, obj, objtype=None):
@@ -171,7 +173,7 @@ def logger(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        logging.basicConfig(level=logging.INFO, format='%levelname)')
+        logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(message)s')
         func(*args, **kwargs)
         
     return wrapper
