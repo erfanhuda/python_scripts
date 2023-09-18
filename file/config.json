@@ -11,7 +11,7 @@
     "file": {
         "input": {
             "mev": ["./file/input/mev/CPI_202306.csv", "./file/input/mev/GDP_202306.csv", "./file/input/mev/BI7D_202306.csv", "./file/input/mev/UNEMPLOYMENT_202306.csv", "./file/input/mev/USDIDR_202306.csv", "./file/input/mev/SGDIDR_202306.csv"],
-            "odr": ["./file/input/mev/ODR.csv"],
+            "odr": "./file/input/mev/ODR.csv",
             "proxy_odr_dir": "./file/proxy_odr/"
         },
         "output_dir": {

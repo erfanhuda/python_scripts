@@ -81,15 +81,27 @@ def auto_populate(**kwargs):
                 # writer.writerow({"tenor": tenor, "pd_segment": products, "bucket_from": bucket_from, "bucket_to": bucket_to, "pt_date": pt_date})
 
 
-parser.add_argument("--run", type=str)
-args = parser.parse_args()
+# parser.add_argument("--run", type=str)
+# args = parser.parse_args()
 
-# match args:
-#     case "--exploit": auto_populate()
-#     case "--products": set_product()
+# # match args:
+# #     case "--exploit": auto_populate()
+# #     case "--products": set_product()
 
 
 
-new_date = set_date(start="2023-01-31", end="2023-05-31")
-products = set_product(product=["Digital_BCL", "Digital_SPL"])
+# new_date = set_date(start="2023-01-31", end="2023-05-31")
+# products = set_product(product=["Digital_BCL", "Digital_SPL"])
 # populasi = auto_populate(product="Digital_BCL", tenor=[1,2,3])
+
+import itertools
+
+date = ["",""]
+products = ["APL"]
+tenor = [3]
+buckets = range(1, 6)
+mob = range(1, 37)
+
+# result = itertools.product(products,tenor,buckets,mob)
+# result = pd.DataFrame(list(result), columns=["PD_Segment", "Tenor", "Bucket", "MOB"])
+# result.to_csv("./file/csv_templates.csv", mode="a")

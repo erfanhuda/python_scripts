@@ -1,3 +1,4 @@
+from typing import Any
 import pandas as pd
 import numpy as np
 import pmdarima as pm
@@ -20,29 +21,29 @@ import logging
 warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
 
-input_mev_file = ["./file/input/mev/CPI_202306.csv", "./file/input/mev/GDP_202306.csv", "./file/input/mev/BI7D_202306.csv", "./file/input/mev/UNEMPLOYMENT_202306.csv", "./file/input/mev/USDIDR_202306.csv", "./file/input/mev/SGDIDR_202306.csv"]
-input_odr_file = "./file/input/mev/ODR.csv"
+# input_mev_file = ["./file/input/mev/CPI_202306.csv", "./file/input/mev/GDP_202306.csv", "./file/input/mev/BI7D_202306.csv", "./file/input/mev/UNEMPLOYMENT_202306.csv", "./file/input/mev/USDIDR_202306.csv", "./file/input/mev/SGDIDR_202306.csv"]
+# input_odr_file = "./file/input/mev/ODR.csv"
 proxy_odr_dir = "./file/proxy_odr/"
 config_file = "./file/fl_config.json"
 var_output_dir = "./file/output/var/"
 arima_output_dir = "./file/output/arima/"
 
 """ Implement the JSON load configuration """
-class BaseFile(json.JSONDecoder):
-    def __init__(self):
-        self.config_file = None
-        
+with open("./file/config.json") as f:
+    config = json.loads(f.read())
+    input_mev_file = config['file']['input']['mev']
+    input_odr_file = config['file']['input']['odr']
+
+
 """ Implement the handling input of MEV variables and combine it. """
 proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
 odr = pd.read_csv("./file/input/mev/ODR.csv", index_col=["qoq_date", "pt_date","pd_segment", "tenor"])
-var1 = pd.read_csv("./file/input/mev/CPI_202306.csv", index_col="Date", parse_dates=True)
-var2 = pd.read_csv("./file/input/mev/GDP_202306.csv", index_col="Date", parse_dates=True)
-var3 = pd.read_csv("./file/input/mev/BI7D_202306.csv", index_col="Date", parse_dates=True)
-var4 = pd.read_csv("./file/input/mev/UNEMPLOYMENT_202306.csv", index_col="Date", parse_dates=True)
-var5 = pd.read_csv("./file/input/mev/USDIDR_202306.csv", index_col="Date", parse_dates=True)
-var6 = pd.read_csv("./file/input/mev/SGDIDR_202306.csv", index_col="Date", parse_dates=True)
 
-mev_combine = [var1,var2,var3,var4,var5]
+# mev_combine = [var1,var2,var3,var4,var5]
+mev_handler = [pd.read_csv(file, header=0, parse_dates=[0], index_col=0,engine="c").squeeze().resample("M") for file in input_mev_file]
+# mev_dtypes = [pd.DataFrame(mev) for mev in mev_combine]
+mev_combine = [pd.DataFrame(mev) for mev in mev_handler]
+
 
 """ Handling missing data """
 def fill_last_value(data):
@@ -55,6 +56,7 @@ def fill_fwd_value(data):
     return pd.concat(data).sort_values('Date').bfill().fillna(0)
 
 mev_combine = fill_interpolate(mev_combine)
+print(mev_combine)
 
 """ Handling MEV Extended Variables """
 def add_growth(data, k):
@@ -198,14 +200,18 @@ Forecast Techniques:
     10. Simple Exponential Smoothing (SES)
     11. Holt Winter\'s Exponential Smoothing (HWES)
 """
+
+
 import itertools
+def set_orders(max_p=0, max_d=0, max_q=0):
+    p = range(max_p)
+    q = range(max_q)
+    d = range(max_d)
+    orders = itertools.product(p, d, q)
 
-p = range(10)
-q = range(10)
-d = range(2)
-orders = itertools.product(p, d, q)
+    logging.debug(f"Total length of orders : {len(list(orders))}")
 
-logging.debug(f"Total length of orders : {len(list(orders))}")
+    return orders    
 
 def split_data(data: list, nrows=0) -> tuple:
     # Split dataset to train set and test set
