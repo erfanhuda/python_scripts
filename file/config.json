@@ -1,45 +1,56 @@
 {   
     
-    "test": {
-        "name": "Test 01 Emi",
-        "period": "",
-        "date": "",
-        "in_sample": ["31-Jan-2023","31-May-2023"],
-        "out_sample": ["30-Jun-2023","31-Aug-2023"],
-        "log": true
-    },
     "file": {
-        "input": {
-            "mev": ["./file/input/mev/CPI_202306.csv", "./file/input/mev/GDP_202306.csv", "./file/input/mev/BI7D_202306.csv", "./file/input/mev/UNEMPLOYMENT_202306.csv", "./file/input/mev/USDIDR_202306.csv", "./file/input/mev/SGDIDR_202306.csv"],
-            "odr": "./file/input/mev/ODR.csv",
-            "proxy_odr_dir": "./file/proxy_odr/"
-        },
-        "output_dir": {
-            "output_dir": "",
-            "dirs": {
-                "var_dir": "./file/output/var/",
-                "log_dir": "./file/output/log",
-                "forecast": "./file/output/arima/",
-                "ols": "./file/output/ols/",
-                "regression": "./file/output/ols/"
-            }
-        }
+        "odr": ["./file/input/mev/ODR.csv"],
+        "mev": ["./file/input/mev/CPI_202306.csv", "./file/input/mev/GDP_202306.csv", "./file/input/mev/BI7D_202306.csv", "./file/input/mev/UNEMPLOYMENT_202306.csv", "./file/input/mev/USDIDR_202306.csv", "./file/input/mev/SGDIDR_202306.csv"],
+        "proxy_odr": "./file/proxy_odr/",
+        "output": "./file/output/"
     },
     "configuration": {
-        "mev" : {
-            "step": true,
-            "smoothing": "MA",
-            "missing_data": "interpolate",
-            "transformations": ["growth","delta","variance","lag1Q", "lag2Q", "lag3Q", "lag4Q"]
+        "variable": {
+            "freq": "M",
+            "combination": 3,
+            "y": {
+                "base": ["odr_balance"],
+                "extend": {
+                    "z_score": 10
+                },
+                "missing_data": "interpolate",
+                "use": ["base", "extend"]
+            },
+            "x": {
+                "base": ["cpi", "gdp", "bi7d"],
+                "extend": {
+                    "growth": 10,
+                    "lag": "1Q"
+                },
+                "missing_data": "interpolate",
+                "use": ["base", "extend"]
+            }
         },
-        "odr": {
-            "step": true,
-            "name": "odr_balance",
-            "smoothing": "z-score",
-            "missing_data": "interpolate"
+        "forecast_model": {
+            "method": "arima",
+            "test": [],
+            "parameters": 0,
+            "in_sample": ["31-Jan-2023","31-May-2023"],
+            "out_sample": ["30-Jun-2023","31-Aug-2023"]
+        },
+        "correlation_model": {
+            "method": "pearson",
+            "test": ["covariance"],
+            "parameters": 0, 
+            "in_sample": ["31-Jan-2023","31-May-2023"],
+            "out_sample": ["30-Jun-2023","31-Aug-2023"]
+        },
+        "regression_model": {
+            "method": "linear regression",
+            "test": ["autocorrelation", "heteroscedasticity", "normality"],
+            "y": ["odr_balance"],
+            "x": [],
+            "in_sample": ["31-Jan-2023","31-May-2023"],
+            "out_sample": ["30-Jun-2023","31-Aug-2023"]
         },
         "forecast": {
-            "step":false,
             "plot": true,
             "log": true,
             "method": "",
@@ -54,24 +65,16 @@
             }
         },
         "ols": {
-            "step": false,
             "plot": true,
             "log": true,
-            "stepwise": [""],
+            "stepwise": ["autocorrelation", "heteroscedasticity", "normality"],
             "parameters": {
                 "p_value": "0.05",
                 "mape": "0.5",
                 "mse": "0.5"
             }
         },
-        "vars": {
-            "step": true,
-            "combination": 3,
-            "plot": true,
-            "log": true
-        },
         "regression": {
-            "step": false,
             "name": "normal",
             "plot": true,
             "log": true,
