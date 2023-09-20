@@ -367,8 +367,6 @@ def forecast_arima(data, n=None):
 
     return data['forecast_auto']
 
-
-
 def AutoRegression():
     from statsmodels.tsa.ar_model import AutoReg
     from random import random
