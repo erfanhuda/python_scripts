@@ -528,7 +528,6 @@ def HWES():
     yhat = model_fit.predict(len(data), len(data))
     print(yhat)
 
-
 """ Handling output operations """
 def export_odr(odrs):
     """ Handling export to file """
@@ -615,7 +614,6 @@ class Extension:
 
 def add_extension(x):
     extension = {k: v for k, v in x.items()}
-
 
 class Procedure:
     def __init__(self):
