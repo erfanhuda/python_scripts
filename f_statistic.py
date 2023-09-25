@@ -1,3 +1,4 @@
+from abc import ABC
 import itertools
 from dataclasses import dataclass, field
 from matplotlib.path import Path
@@ -23,7 +24,7 @@ import datetime
 warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - Seabank - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
 
-BASE_CONFIG_FILE = "./file/fl_config.json"
+BASE_CONFIG_FILE = "./config.json"
 
 class NodeCommand:
     def __init__(self, command):
@@ -291,17 +292,17 @@ Forecast Techniques:
     10. Simple Exponential Smoothing (SES)
     11. Holt Winter\'s Exponential Smoothing (HWES)
 """
-@dataclass
-class Order:
-    p: int = field(default=10)
-    q: int = field(default=10)
-    d: int = field(default=2)
-    m: int = field(default=0)
+# @dataclass
+# class Order:
+#     p: int = field(default=10)
+#     q: int = field(default=10)
+#     d: int = field(default=2)
+#     m: int = field(default=0)
 
-@dataclass
-class TypeOrder:
-    types: str = field(default="ARIMA")
-    order: object = field(init=False,default=Order())
+# @dataclass
+# class TypeOrder:
+#     types: str = field(default="ARIMA")
+#     order: object = field(init=False,default=Order())
 
 
 def set_orders(types="ARIMA", p=10, d=2, q=10, m=0):
@@ -535,7 +536,6 @@ def export_odr(odrs):
         odrs[i].to_csv(f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
 
 def export_corr_and_variables(label, dirs, odrs, corr_odrs, pval_odrs, types="excel"):
-    
     if types == "excel":
         for item in range(len(label)):
             path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}.xlsx"
@@ -682,7 +682,6 @@ def parsing_config():
 
         except BaseException: 
             logging.error("Coba cek lagi section untuk konfigurasinya.")
-
 
 def mainloop():
     while True:
