@@ -4,7 +4,8 @@
         "odr": ["./file/input/mev/ODR.csv"],
         "mev": ["./file/input/mev/CPI_202306.csv", "./file/input/mev/GDP_202306.csv", "./file/input/mev/BI7D_202306.csv", "./file/input/mev/UNEMPLOYMENT_202306.csv", "./file/input/mev/USDIDR_202306.csv", "./file/input/mev/SGDIDR_202306.csv"],
         "proxy_odr": "./file/proxy_odr/",
-        "output": "./file/output/"
+        "output": "./file/output/",
+        "extension": "excel"
     },
     "configuration": {
         "variable": {
@@ -13,7 +14,8 @@
             "y": {
                 "base": ["odr_balance"],
                 "extend": {
-                    "z_score": 10
+                    "z_score": 10,
+                    "ln": []
                 },
                 "missing_data": "interpolate",
                 "use": ["base", "extend"]
@@ -22,7 +24,8 @@
                 "base": ["cpi", "gdp", "bi7d"],
                 "extend": {
                     "growth": 10,
-                    "lag": "1Q"
+                    "lag": ["1Q", "2Q", "3Q","4Q"],
+                    "lead": ["1Q", "2Q", "3Q", "4Q"]
                 },
                 "missing_data": "interpolate",
                 "use": ["base", "extend"]
