@@ -1239,7 +1239,6 @@ class File:
                 pval_odrs[item].to_csv(f"{path}_pval_odrs.csv")
 
                 logging.info("Finished exporting to {}".format(path))
-        
         else: 
             raise TypeError("No parameter for file type match.")
 
