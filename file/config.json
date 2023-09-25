@@ -31,6 +31,7 @@
         "forecast_model": {
             "method": "arima",
             "test": [],
+            "orders": [],
             "parameters": 0,
             "in_sample": ["31-Jan-2023","31-May-2023"],
             "out_sample": ["30-Jun-2023","31-Aug-2023"]

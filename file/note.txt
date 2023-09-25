@@ -121,14 +121,11 @@ HOW THIS PROGRAM WORKS
 o	Intergrated means no of times we difference the data then we have to integrated it back to get the original series back.
 o	We difference to remove trend and seasonality to it stationary series as only after making a series stationary we cam impliment AR and MA.
 
-
-
 ============================================================
 INPUT / OUTPUT FILES AND DIRECTORIES
 ------------------------------------------------------------
 1. To specify the directory locations use string or use key with "dir"
 2. To specify the files locations use list or use key without "dir" or with "files"
-
 
 ============================================================
 EXTEND VARIABLES FEATURES
@@ -146,3 +143,50 @@ EXTEND VARIABLES FEATURES
 11. Simple Moving Average (sma)
 12. Cumulative Moving Average (cma)
 13. Exponential Moving Average (ema)
+
+============================================================
+CORRELATION FITTING MODEL
+------------------------------------------------------------
+1. Set the base variable
+2. Set the extended variable list method
+3. Set the parameter of extended variable list
+4. Specify the independent_var and dependent_var which wanna test, if no specify by default test all the variables on the list, including the base and extended variables.
+5. Export the output in excel by default (Variables, Correlation Value, p_value)
+
+-- Stop by default
+
+============================================================
+REGRESSION FITTING MODEL
+------------------------------------------------------------
+1. Choose the regression type
+2. Set the y and x variables
+3. Set the combination
+4. Set the OLS parameters
+5. Export the output in excel by default (Variables, Correlation Value, p_value)
+
+-- Stop by default, if no specified the rule of stop, then it would find the best one by parameter input.
+============================================================
+RUNNING REGRESSION
+------------------------------------------------------------
+1. 
+
+
+
+
+============================================================
+FORECAST FITTING MODEL
+------------------------------------------------------------
+1. Set method fitting model
+2. Set method parameters fitting model
+3. Set variables fitting model
+4. Covariance test
+5. Running fittig model
+6. Export the output and specify the rank models by parameters.
+
+-- Stop by default, if no specified the rule of stop, then it would find the best one by parameter input.
+============================================================
+RUNNING FORECAST
+------------------------------------------------------------
+7. Choose the model and method
+8. Set the model parameters
+9. Export the output by default
