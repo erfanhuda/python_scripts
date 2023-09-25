@@ -1,7 +1,6 @@
-from email.policy import default
 import itertools
 from dataclasses import dataclass, field
-from tkinter import N
+import os
 from matplotlib.path import Path
 import pandas as pd
 import numpy as np
@@ -293,17 +292,17 @@ Forecast Techniques:
     10. Simple Exponential Smoothing (SES)
     11. Holt Winter\'s Exponential Smoothing (HWES)
 """
-@dataclass
-class Order:
-    p: int = field(default=10)
-    q: int = field(default=10)
-    d: int = field(default=2)
-    m: int = field(default=0)
+# @dataclass
+# class Order:
+#     p: int = field(default=10)
+#     q: int = field(default=10)
+#     d: int = field(default=2)
+#     m: int = field(default=0)
 
-@dataclass
-class TypeOrder:
-    types: str = field(default="ARIMA")
-    order: object = field(init=False,default=Order())
+# @dataclass
+# class TypeOrder:
+#     types: str = field(default="ARIMA")
+#     order: object = field(init=False,default=Order())
 
 
 def set_orders(types="ARIMA", p=10, d=2, q=10, m=0):
@@ -368,8 +367,6 @@ def forecast_arima(data, n=None):
     data['forecast_auto'] = [None] * len(data) + list(forecast_auto)
 
     return data['forecast_auto']
-
-
 
 def AutoRegression():
     from statsmodels.tsa.ar_model import AutoReg
@@ -532,7 +529,6 @@ def HWES():
     yhat = model_fit.predict(len(data), len(data))
     print(yhat)
 
-
 """ Handling output operations """
 def export_odr(odrs):
     """ Handling export to file """
@@ -620,7 +616,6 @@ class Extension:
 def add_extension(x):
     extension = {k: v for k, v in x.items()}
 
-
 class Procedure:
     def __init__(self):
         self.command = []
@@ -666,6 +661,9 @@ def parsing_file_config():
         except BaseException:
             logging.error("Sorry, cannot setup the configuration files. Please check the input and output section again.")
 
+        except:
+            logging.error("Something went wrong.")
+
 def parsing_config():
     """ Parsing the stepwise and parameters configuration """
     with open(BASE_CONFIG_FILE) as f:
@@ -690,53 +688,115 @@ def parsing_config():
             logging.error("Coba cek lagi section untuk konfigurasinya.")
 
 
-def mainloop():
-    while True:
-        files = parsing_file_config()
-        config = parsing_config()
-        # print(x_extension)
-        # print(x_base)
-        proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
-        odr = pd.read_csv(files['files']['odr_files'][0], index_col=["qoq_date", "pt_date","pd_segment", "tenor"],parse_dates=['qoq_date', 'pt_date'])
+# def mainloop():
+#     while True:
+#         files = parsing_file_config()
+#         config = parsing_config()
+#         # print(x_extension)
+#         # print(x_base)
+#         proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
+#         odr = pd.read_csv(files['files']['odr_files'][0], index_col=["qoq_date", "pt_date","pd_segment", "tenor"],parse_dates=['qoq_date', 'pt_date'])
 
-        mev_combine = [pd.read_csv(file, low_memory=True, parse_dates=['Date']) for file in files['files']['mev_files']]
-        mev_combine = [data.set_index("Date") for data in mev_combine]
-        mev_combine = fill_last_value(mev_combine)
-        mev_combine = mev_combine.loc[mev_combine.index == mev_combine.index.to_period('M').to_timestamp('M')]
+#         mev_combine = [pd.read_csv(file, low_memory=True, parse_dates=['Date']) for file in files['files']['mev_files']]
+#         mev_combine = [data.set_index("Date") for data in mev_combine]
+#         mev_combine = fill_last_value(mev_combine)
+#         mev_combine = mev_combine.loc[mev_combine.index == mev_combine.index.to_period('M').to_timestamp('M')]
 
-        """Execution Proxy ODR"""
-        fill_odr = proxy_odr.iloc[:].ffill()
+#         """Execution Proxy ODR"""
+#         fill_odr = proxy_odr.iloc[:].ffill()
 
-        """Execution ODR """
-        group = odr.groupby(level=["pd_segment", "tenor"])
-        odrs = [group.get_group(x) for x in group.groups]
+#         """Execution ODR """
+#         group = odr.groupby(level=["pd_segment", "tenor"])
+#         odrs = [group.get_group(x) for x in group.groups]
 
-        """Execution combination variables Between ODR and MEV"""
-        transform_zscore(odrs)
-        odrs = [odr.reset_index().set_index('qoq_date') for odr in odrs]
-        odrs = [pd.concat([odr, mev_combine], axis=1).ffill().fillna(0) for odr in odrs]
-        label = [(odr['pd_segment'].iloc[-1], odr['tenor'].iloc[-1]) for odr in odrs]
-        odrs = [x.drop(['pt_date', 'pd_segment', 'tenor'], axis=1) for x in odrs]
+#         """Execution combination variables Between ODR and MEV"""
+#         transform_zscore(odrs)
+#         odrs = [odr.reset_index().set_index('qoq_date') for odr in odrs]
+#         odrs = [pd.concat([odr, mev_combine], axis=1).ffill().fillna(0) for odr in odrs]
+#         label = [(odr['pd_segment'].iloc[-1], odr['tenor'].iloc[-1]) for odr in odrs]
+#         odrs = [x.drop(['pt_date', 'pd_segment', 'tenor'], axis=1) for x in odrs]
 
-        corr_odrs = [x.corr() for x in odrs]
-        pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
+#         corr_odrs = [x.corr() for x in odrs]
+#         pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
+#         export_corr_and_variables(label=label, dirs=files['dirs'], odrs=odrs, corr_odrs=corr_odrs, pval_odrs=pval_odrs)
+
+#         break
+
+
+# def main2():
+#     start_time = datetime.datetime.now()
+#     logging.info("Script running on {}".format(start_time))
+
+#     """ Lies the main runner program """
+#     mainloop()
+
+#     end_time = datetime.datetime.now()
+#     logging.info("Script finished on {}".format(end_time))
+#     logging.info("Script running about {}".format(end_time - start_time))
+
+
+class JSONFile:
+    def __init__(self, file):
+        # self._f = file
+        self.catch_file_inputs(file)
+
+    def catch_file_inputs(self, file):
+        files = json.loads(file)
+
+        logging.info(files)
+
+class App:
+    def __init__(self):
+        self._f = None
+        self._p = None
+
+    @property
+    def set_file(self):
+        return self._f
+    
+    @set_file.setter
+    def set_file(self, file):
+        logging.info("Read parameter %s ...", str(file))
+
+        if not isinstance(file, str):
+            raise ValueError("File must be a string")
         
-        export_corr_and_variables(label=label, dirs=files['dirs'], odrs=odrs, corr_odrs=corr_odrs, pval_odrs=pval_odrs)
+        if not os.path.exists(file):
+            logging.error("File not found %s", str(file))
+            raise FileNotFoundError(file)
+        
+        self._p = os.path.abspath(file)
+        self._f = os.path.basename(file)
 
-        break
+        logging.info("File: %s", self._f)
+        logging.info("Location: %s", self._p)
 
+    def run(self):
+        
+        logging.info("File detected in %s format", str(self._f.split(".")[-1]))
+        logging.info("Read the content ...")
+        formatter = self._f.split(".")[-1]
+        if formatter == "json":
+            # config = JSONFile(self._f)
+            pass
+            
+        elif formatter == "xml":
+            pass
 
 def main():
+    """ Lies the start time script running"""
     start_time = datetime.datetime.now()
     logging.info("Script running on {}".format(start_time))
 
     """ Lies the main runner program """
-    mainloop()
+    app = App()
+    app.set_file = "./file/config.json"
+    app.run()
 
+    """ Lies the end time script running"""
     end_time = datetime.datetime.now()
     logging.info("Script finished on {}".format(end_time))
     logging.info("Script running about {}".format(end_time - start_time))
-
 
 if __name__ == "__main__":
     main()

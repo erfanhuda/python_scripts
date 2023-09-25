@@ -1,3 +1,4 @@
+from collections import Counter
 import os
 import logging
 from abc import ABC, abstractmethod
@@ -20,6 +21,58 @@ def find_dir_size():
     s = Directory("src")
     g = Directory("node_modules")
     print(s.size)
+
+class Validator(ABC):
+    """Abstract class for validate type"""
+    def __set_name__(self, owner, name):
+        self.private_name = "_" + name
+
+    def __get__(self, obj, objType=None):
+        return getattr(obj, self.private_name)
+    
+
+    def __set__(self, obj, value):
+        self.validate(value)
+        setattr(obj, self.private_name, value)
+
+    @abstractmethod
+    def validate(self, value):
+        pass
+
+class Number(Validator):
+    """Implement the interface class for validator numbers or float type."""
+    def __init__(self, minValue=None, maxValue=None):
+        self.minvalue = minValue
+        self.maxvalue = maxValue
+
+    def validate(self, value):
+        if not isinstance(value, (int, float)):
+            raise TypeError(f'Expected {value!r} to be an int or float')
+        if self.minvalue is not None and value < self.minvalue:
+            raise ValueError(f'Expected {value!r} to be at least {self.minvalue!r}')
+        if self.maxvalue is not None and value > self.maxvalue:
+            raise ValueError(f'Expected {value!r} to be no more than {self.maxvalue!r}')
+        
+class String(Validator):
+    """Implement the interface class for string, char types."""
+    def __init__(self, char):
+        self.char = char
+
+    def validate(self,value):
+        if not isinstance(value, (str)):
+            raise TypeError(f"Expected {value!r} to be str")
+        
+class Dimensional(Validator):
+    """Implement the interface class for array matrix with contains of number or float only."""
+
+    def validate(self, value):
+        length = []
+        for i, row in enumerate(value):
+            length.append({"col": len(row)})
+
+        if not all(x == length[0] for x in length):
+            raise TypeError(f"Cannot build the matrix. Expected same length column.")
+    
 
 class LoggedAgeAccess:
     """ Descriptor Managed Attributes """
@@ -179,16 +232,82 @@ def unpickle(file):
 
     return obj
 
+
+class Matrix:
+    """Implementing the matrix object."""
+    array = Dimensional()
+    def __init__(self, array=[]):
+        self.array = array
+
+    @property
+    def length(self):
+        length = []
+        for i, row in enumerate(self.array):
+            length.append({"row": i + 1, f"col_length": len(row)})
+        
+        return length
+    
+    @property
+    def dimension(self):
+        return "{} X {}".format(self.length[-1]['row'], self.length[-1]['col_length'])
+
+    def __len__(self):
+        return len(self.array)
+
+    def __mul__(self, other):
+        self.array = [[sum(a * b for a, b in zip(A_row, B_col)) for B_col in zip(*self.array)] for A_row in other]
+
+    def __iter__(self):
+        return self.array
+
+    def __getitem__(self, idx):
+        return self.array[idx]
+    
+    def __setitem__(self, idx, val):
+        self.array[idx] = val
+    
+    def __transpose__(self):
+        return [[row[i] for row in self.array] for i in range(0,len(self.array))]
+
+    def __str__(self):
+        return "{}".format(str(self.array).replace("],", "],\n"))
+        
+class Point:
+    """Implementing the point data types"""
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    
+    def __add__(self, other):
+        return Point(self.x + other.x, self.y + other.y)
+    
+    def __sub__(self, other):
+        return Point(self.x - other.x, self.y - other.y)
+    
+    def __mul__(self, other):
+        return Point(self.x * other.x, self.y * other.y)
+
+    def __div__(self, other):
+        return Point(self.x / other.x, self.y / other.y)
+    
+    def __str__(self):
+        return f"Point({self.x}, {self.y})"
+
 def m_transpose(matrix):
     return [[row[i] for row in matrix] for i in range(0,len(matrix))]
 
 def m_mult(A, B):
     return [[sum(a * b for a, b in zip(A_row, B_col)) for B_col in zip(*B)] for A_row in A]
 
+
+def same_property(items):
+    return all(x == items[0] for x in items)
+
 def main():
-    m1 = Matrix([[[1,3,3,4], [2,2,2,2], [3,3,3,3], [4,4,4,4]],[[1,3,3,4], [2,2,2,2], [3,3,3,3], [4,4,4,4]]])
-    m2 = Matrix([[1,3,3,4], [2,2,2,2], [3,3,3,1]])
-    print(m1, "\n", m2.size)
+    m1 = Matrix([[1,3,3,4], [2,2,2,1], [3,3,3,3], [4,4,4,4]])
+    m2 = Matrix([[1,3,3,4], [2,2,2,1,0], [3,3,3,3,4]])
+
+    print(m1.dimension)
 
 
 if "__main__" == __name__:

@@ -1,45 +1,123 @@
+-------------------------------------------------------------------------------
 TIME SERIES ANALYSIS
+===============================================================================
+By : Finance Project - Seabank
 
 Time series: when all other factors are constant prediction of future values.
-•	Differenent Methods of doing Time series Analysis and Forecasting
-o	ARIMA model. 
-o	Seasonaly ARIMA.  Most used.
-o	Holt Winter Exponential Smoothing.Easiest and effective model.Link
-o	Advanced Models (..Cooning soon! Start only after above 3 are done.)
+Differenent Methods of doing Time series Analysis and Forecasting:
+1. ARIMA model. 
+2. Seasonaly ARIMA.  Most used.
+3. Holt Winter Exponential Smoothing.Easiest and effective model.
 
-1.	Important Concepts and terminology in Time series Analysis.
-o	Stationarity. To know everything follow the link. 
-	A stationary time series is one whose properties(ie mean, variance, autocorrelation) does not depend on the time.
-o	Autoregression AR. 
-o	Moving Average MA
-o	Integration & Difference
-o	ACF and PACF Plots
-o	Time series components:
-	Trend: long term smooth movement, upward or downward
-	Seasonal: periodic fluctuation, less than 1 year, most commonly found in industry.
-	Cyclical: periodic fluctuation, more than 1 year.
-	irregularity: random movement.
+Important Concepts and terminology in Time series Analysis.
+1A. Stationarity. To know everything foll   ow the link. 
+A. stationary time series is one whose properties(ie mean, variance, autocorrelation) does not depend on the time.
+- Autoregression AR. 
+- Moving Average MA
+- Integration & Difference
+- ACF and PACF Plots
 
+1B. Time series components:
+- Trend: long term smooth movement, upward or downward
+- Seasonal: periodic fluctuation, less than 1 year, most commonly found in industry.
+- Cyclical: periodic fluctuation, more than 1 year.
+- irregularity: random movement.
 
-•	ARIMA is the Most common model used for time series forecasting. It has 3 components.
-1.	Autoregression AR. 
-2.	Moving Average MA
-3.	Integrated
+ARIMA is the Most common model used for time series forecasting. It has 3 components.
+- Autoregression AR
+- Moving Average MA
+- Integrated
 
 1.	Autoregression AR.
-o	Future values of Y is dependent of previous lagged values of Y.
-o	regression of yt on yt-1, yt-2 .
-o	P = ORDER OF AR; current value of y is dependent on how many previous lagged value of current Y. if p=2 that means yt is dependent on yt-1 and yt-2.
-o	P from PACF 
-o	Interpretation of PACF: 
+- Future values of Y is dependent of previous lagged values of Y.
+- regression of yt on yt-1, yt-2 .
+- P = ORDER OF AR; current value of y is dependent on how many previous lagged value of current Y. if p=2 that means yt is dependent on yt-1 and yt-2.
+- P from PACF 
+- Interpretation of PACF: 
 2.	Moving Average MA.
-o	Future values of Y is dependent of previous lagged values of white noise ie the irregular component. white noise is just  the error. error is the differerence between the actual value and predicted value. so we take into considerration the error also to predict the future value.
-o	autocorrelation between the errors.
-o	Trend, s, c components of TS is captured in AR where as the irregular comp is captured in MA.
-o	q is order of MA.
-o	ACF gives q.
+- Future values of Y is dependent of previous lagged values of white noise ie the irregular component. white noise is just  the error. error is the differerence between the actual value and predicted value. so we take into considerration the error also to predict the future value.
+- autocorrelation between the errors.
+- Trend, s, c components of TS is captured in AR where as the irregular comp is captured in MA.
+- q is order of MA.
+- ACF gives q.
 
 3.	Integrated
+- Intergrated means no of times we difference the data then we have to integrated it back to get the original series back.
+- We difference to remove trend and seasonality to it stationary series as only after making a series stationary we cam impliment AR and MA.
+
+-------------------------------------------------------------------------------
+TIMESERIES FORECAST TECHNIQUES
+===============================================================================
+Forecast Techniques:
+    1. Autoregression (AR) --> using AutoReg
+    2. Moving Average (MA) --> using SARIMAX with order p
+    3. Autoregressive Moving Average (ARMA) --> using SARIMAX with order p, q
+    4. Autoregressive Integrated Moving Average (ARIMA) --> using SARIMAX with order p, d, q
+    5. Seasonal Autoregressive Integrated Moving-Average (SARIMA) --> using SARIMAX with order p, d, q, s
+    6. Seasonal Autoregressive Integrated Moving-Average with Exogenous Regressors (SARIMAX) --> using SARIMAX
+    7. Vector Autoregression (VAR) 
+    8. Vector Autoregression Moving-Average (VARMA)
+    9. Vector Autoregression Moving-Average with Exogenous Regressors (VARMAX)
+    10. Simple Exponential Smoothing (SES)
+    11. Holt Winter\'s Exponential Smoothing (HWES)
+
+-------------------------------------------------------------------------------
+ARIMA FINDING FITTED ORDERS
+===============================================================================
+1. Iterate with itertools.product
+2. 
+
+
+-------------------------------------------------------------------------------
+STEPWISE STATISTICAL FORWARD LOOKING
+===============================================================================
+1. MEV Collection (input file)
+2. ODR Collection (input file)
+3. MEV + ODR data preprocessing (output file):
+3A. cleansing and smoothing
+3B. transformation and extended variables
+4. Common variables testing :
+4A. MEV + ODR scatterplot (output file)
+4B. OLS Test
+5. Scalar formula = Avg. ODR (Intercept) / MA
+
+-------------------------------------------------------------------------------
+MODEL EVALUATION PARAMETERS
+===============================================================================
+Model Evaluations consisting of:
+1. Preprocess data
+2. Single variable correlation
+3. Combination variables correlation
+4. Forecast
+5. OLS
+6. Correlation & Regression
+7. Scalar
+
+Variable evaluation for forecast:
+1. Stationarity
+
+Model evaluation for single variable:
+1. Autocorrelation -> statsmodels.api.tsa.acf
+
+Model evaluation for combination variables:
+1. Multicollinearity -> statsmodels.stats.outliers_influence.variance_inflation_factor
+2. Par-Autocorrelation -> statsmodels.api.tsa.acf
+
+Model evaluation for number 6:
+1. correl (x1-x2) < 60%, correl (x1-dep var) > 60%, correl (x2-depvar) >60%
+2. p-value < 5%
+3. coeff, coeff x1 dan x2
+4. r-square > 50%
+5. MAPE out sample < 20%
+6. asumsi multikolinearitas > not presence multikol (expected near 0)
+7. asumsi heteroskedastisitas > not presence hetero (expected near 0)
+8. asumsi autokorelasi > not presence autokol (expected near 0)
+
+-------------------------------------------------------------------------------
+HOW THIS PROGRAM WORKS
+===============================================================================
+1. JSON file & pythons, JSON to input the file and parameter configurations, and python to process the statistical.
+2. 
 o	Intergrated means no of times we difference the data then we have to integrated it back to get the original series back.
 o	We difference to remove trend and seasonality to it stationary series as only after making a series stationary we cam impliment AR and MA.
 
