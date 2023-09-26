@@ -1,7 +1,7 @@
-import argparse
 import itertools
 from dataclasses import dataclass, field
 import os
+import argparse
 from matplotlib.path import Path
 import pandas as pd
 import numpy as np
@@ -221,7 +221,17 @@ Forecast Techniques:
 #     q: int = field(default=10)
 #     d: int = field(default=2)
 #     m: int = field(default=0)
+# @dataclass
+# class Order:
+#     p: int = field(default=10)
+#     q: int = field(default=10)
+#     d: int = field(default=2)
+#     m: int = field(default=0)
 
+# @dataclass
+# class TypeOrder:
+#     types: str = field(default="ARIMA")
+#     order: object = field(init=False,default=Order())
 # @dataclass
 # class TypeOrder:
 #     types: str = field(default="ARIMA")
@@ -650,7 +660,6 @@ def add_extension(x):
 #     logging.info("Script running about {}".format(end_time - start_time))
 
 #  ##############################################################################
-
 class NodeCommand:
     def __init__(self, command):
         self.command = command
@@ -1232,7 +1241,6 @@ class File:
                 pval_odrs[item].to_csv(f"{path}_pval_odrs.csv")
 
                 logging.info("Finished exporting to {}".format(path))
-        
         else: 
             raise TypeError("No parameter for file type match.")
 

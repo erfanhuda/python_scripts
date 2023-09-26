@@ -4,8 +4,7 @@
         "odr": ["./file/input/mev/ODR.csv"],
         "mev": ["./file/input/mev/CPI_202306.csv", "./file/input/mev/GDP_202306.csv", "./file/input/mev/BI7D_202306.csv", "./file/input/mev/UNEMPLOYMENT_202306.csv", "./file/input/mev/USDIDR_202306.csv", "./file/input/mev/SGDIDR_202306.csv"],
         "proxy_odr": "./file/proxy_odr/",
-        "output": "./file/output/",
-        "extension": "excel"
+        "output": "./file/output/"
     },
     "configuration": {
         "variable": {
@@ -14,8 +13,7 @@
             "y": {
                 "base": ["odr_balance"],
                 "extend": {
-                    "z_score": 10,
-                    "ln": []
+                    "z_score": 10
                 },
                 "missing_data": "interpolate",
                 "use": ["base", "extend"]
@@ -24,8 +22,7 @@
                 "base": ["cpi", "gdp", "bi7d"],
                 "extend": {
                     "growth": 10,
-                    "lag": ["1Q", "2Q", "3Q","4Q"],
-                    "lead": ["1Q", "2Q", "3Q", "4Q"]
+                    "lag": "1Q"
                 },
                 "missing_data": "interpolate",
                 "use": ["base", "extend"]
@@ -34,7 +31,6 @@
         "forecast_model": {
             "method": "arima",
             "test": [],
-            "orders": [],
             "parameters": 0,
             "in_sample": ["31-Jan-2023","31-May-2023"],
             "out_sample": ["30-Jun-2023","31-Aug-2023"]
