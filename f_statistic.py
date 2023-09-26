@@ -454,39 +454,39 @@ def HWES():
 
 
 """ Handling output operations """
-def export_odr(odrs):
-    """ Handling export to file """
-    for i in range(len(odrs)):
-        odrs[i].to_csv(f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
+# def export_odr(odrs):
+#     """ Handling export to file """
+#     for i in range(len(odrs)):
+#         odrs[i].to_csv(f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
 
-def export_corr_and_variables(label, dirs, odrs, corr_odrs, pval_odrs, types="excel"):
+# def export_corr_and_variables(label, dirs, odrs, corr_odrs, pval_odrs, types="excel"):
     
-    if types == "excel":
-        for item in range(len(label)):
-            path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}.xlsx"
+#     if types == "excel":
+#         for item in range(len(label)):
+#             path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}.xlsx"
 
-            with pd.ExcelWriter(path) as writer:
-                logging.info("Exporting {}".format(path))
-                odrs[item].to_excel(writer, sheet_name="variables")
-                corr_odrs[item].to_excel(writer, sheet_name="correlation")
-                pval_odrs[item].to_excel(writer, sheet_name="corr_pvalue")
+#             with pd.ExcelWriter(path) as writer:
+#                 logging.info("Exporting {}".format(path))
+#                 odrs[item].to_excel(writer, sheet_name="variables")
+#                 corr_odrs[item].to_excel(writer, sheet_name="correlation")
+#                 pval_odrs[item].to_excel(writer, sheet_name="corr_pvalue")
 
-            logging.info("Finished exporting to {}".format(path))
+#             logging.info("Finished exporting to {}".format(path))
 
 
-    elif types == "csv":
-        for item in range(len(label)):
-            path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}"
+#     elif types == "csv":
+#         for item in range(len(label)):
+#             path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}"
 
-            logging.info("Exporting {}".format(path))
-            odrs[item].to_csv(f"{path}_odrs.csv")
-            corr_odrs[item].to_csv(f"{path}_corr_odrs.csv")
-            pval_odrs[item].to_csv(f"{path}_pval_odrs.csv")
+#             logging.info("Exporting {}".format(path))
+#             odrs[item].to_csv(f"{path}_odrs.csv")
+#             corr_odrs[item].to_csv(f"{path}_corr_odrs.csv")
+#             pval_odrs[item].to_csv(f"{path}_pval_odrs.csv")
 
-            logging.info("Finished exporting to {}".format(path))
+#             logging.info("Finished exporting to {}".format(path))
     
-    else: 
-        raise TypeError("No parameter for file type match.")
+#     else: 
+#         raise TypeError("No parameter for file type match.")
 
 # export_odr(variables[0][1])
 # final_odrs = [odr.reset_index() for odr in odrs]
