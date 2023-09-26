@@ -1127,6 +1127,17 @@ class JSONFile:
 
         logging.info(files)
 
+
+class ContextTracker:
+    def __init__(self, filename):
+        self.filename = filename
+
+    def __enter__(self):
+        logging.info("Entering tracker %s ...", self.filename)
+
+    def __exit__(self, exc_type, exc_value, trace):
+        logging.info("Exiting tracker %s ...", self.filename)
+
 class File:
     def __init__(self):
         self._f = None
@@ -1245,38 +1256,36 @@ class File:
             raise TypeError("No parameter for file type match.")
 
     def mainloop(self):
-        while True:
-            files = self.parsing_file_config()
-            config = self.parsing_config()
-            # print(x_extension)
-            # print(x_base)
-            proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
-            odr = pd.read_csv(files['files']['odr_files'][0], index_col=["qoq_date", "pt_date","pd_segment", "tenor"],parse_dates=['qoq_date', 'pt_date'])
+        files = self.parsing_file_config()
+        config = self.parsing_config()
+        # print(x_extension)
+        # print(x_base)
+        proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
+        odr = pd.read_csv(files['files']['odr_files'][0], index_col=["qoq_date", "pt_date","pd_segment", "tenor"],parse_dates=['qoq_date', 'pt_date'])
 
-            mev_combine = [pd.read_csv(file, low_memory=True, parse_dates=['Date']) for file in files['files']['mev_files']]
-            mev_combine = [data.set_index("Date") for data in mev_combine]
-            mev_combine = fill_last_value(mev_combine)
-            mev_combine = mev_combine.loc[mev_combine.index == mev_combine.index.to_period('M').to_timestamp('M')]
+        mev_combine = [pd.read_csv(file, low_memory=True, parse_dates=['Date']) for file in files['files']['mev_files']]
+        mev_combine = [data.set_index("Date") for data in mev_combine]
+        mev_combine = fill_last_value(mev_combine)
+        mev_combine = mev_combine.loc[mev_combine.index == mev_combine.index.to_period('M').to_timestamp('M')]
 
-            """Execution Proxy ODR"""
-            fill_odr = proxy_odr.iloc[:].ffill()
+        """Execution Proxy ODR"""
+        fill_odr = proxy_odr.iloc[:].ffill()
 
-            """Execution ODR """
-            group = odr.groupby(level=["pd_segment", "tenor"])
-            odrs = [group.get_group(x) for x in group.groups]
+        """Execution ODR """
+        group = odr.groupby(level=["pd_segment", "tenor"])
+        odrs = [group.get_group(x) for x in group.groups]
 
-            """Execution combination variables Between ODR and MEV"""
-            transform_zscore(odrs)
-            odrs = [odr.reset_index().set_index('qoq_date') for odr in odrs]
-            odrs = [pd.concat([odr, mev_combine], axis=1).ffill().fillna(0) for odr in odrs]
-            label = [(odr['pd_segment'].iloc[-1], odr['tenor'].iloc[-1]) for odr in odrs]
-            odrs = [x.drop(['pt_date', 'pd_segment', 'tenor'], axis=1) for x in odrs]
+        """Execution combination variables Between ODR and MEV"""
+        transform_zscore(odrs)
+        odrs = [odr.reset_index().set_index('qoq_date') for odr in odrs]
+        odrs = [pd.concat([odr, mev_combine], axis=1).ffill().fillna(0) for odr in odrs]
+        label = [(odr['pd_segment'].iloc[-1], odr['tenor'].iloc[-1]) for odr in odrs]
+        odrs = [x.drop(['pt_date', 'pd_segment', 'tenor'], axis=1) for x in odrs]
 
-            corr_odrs = [x.corr() for x in odrs]
-            pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
-            # self.export_corr_and_variables(label=label, dirs=files['dirs'], odrs=odrs, corr_odrs=corr_odrs, pval_odrs=pval_odrs)
+        corr_odrs = [x.corr() for x in odrs]
+        pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
+        # self.export_corr_and_variables(label=label, dirs=files['dirs'], odrs=odrs, corr_odrs=corr_odrs, pval_odrs=pval_odrs)
 
-            break
 
     def run(self):
         
