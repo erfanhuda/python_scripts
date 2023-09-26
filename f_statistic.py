@@ -16,12 +16,20 @@ import scipy.stats as stats
 
 import warnings
 import json
+import xml.etree.ElementTree as ET
 import logging
 import datetime
 
-from collections import namedtuple
+import collections
 
-_base = namedtuple("_base", ['key', 'value'])
+Base = collections.namedtuple("base", ['key', 'type'])
+
+y_variable = Base('y_variable', list)
+x_variable = Base('x_variable', list)
+forecast = Base("forecast", dict)
+single_factor = Base("single_factor", dict)
+multiple_factor = Base("multiple_factor", dict)
+
 warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - Seabank Finpro - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
 
@@ -839,7 +847,6 @@ class Extend:
             odr[f'CMA{n}_odr_client'] = odr['odr_client'].expanding(n).mean().fillna(0)
         logging.info("Finished extending cumulative moving average")
 
-        
     def transform_ema(odrs, n=12):
         """ Exponential Moving Average for list of ODRS"""
         logging.info("Running exponential moving average transformation")
@@ -1121,19 +1128,14 @@ class Forecast:
         yhat = model_fit.predict(len(data), len(data))
         print(yhat)
 
-class ParamConfig:
-    def __init__(self):
-        self._p = namedtuple('Parameters', ['key', 'value'])
-class FileConfig:
-    def __init__(self):
-        self._f = namedtuple("FileConfig", ['input_file', 'output_file'])
-
+procedure = collections.deque()
 class JSONFile:
     def __init__(self, file):
         self._f = file
         self._file_keys = []
         self._param_keys = []
-        self.generate_file_keys()
+        self._set_list = []
+        self._set_dict = []
         # self.generate_param_keys()
         # self.catch_file_inputs(file)
 
@@ -1156,31 +1158,90 @@ class JSONFile:
                 for c in itertools.permutations(k, i):
                     self._file_keys.append("".join(c))
 
-    def read_file(self):
+    def _read_file(self) -> None:
         f = open(self._f)
         text = json.load(f)
-        # text = namedtuple("base_parser", ["file", "test"])
-        keys = text.keys()
-        values = text.values()
+        self.text = text
+
+    def read_keys(self) -> None:
+        self._read_file()
+        items = self.text.items()
+
+        for item in items:
+            if isinstance(item[1], list):
+                logging.info("Reading key list : %s. Found %s length values", item[0], len(item[1]))
+                self._set_list.append({item[0] : item[1]})
+                procedure.append(item[0])
+
+            elif isinstance(item[1], dict):
+                logging.info("Reading key dict : %s. Found %s pair subkeys", item[0], len(item[1].keys()))
+                self._set_dict.append({item[0] : item[1]})
+                procedure.append(item[0])
         
-        for item in keys:
+    def read_values(self) -> None:
+        self._read_file()
+        values = self.text.values()
+        
+        for item in values:
+            logging.info("Reading value : %s", item)
             if item in self._file_keys:
                 logging.info("\"%s\" matched. found keys file", item)
             elif item in self._param_keys:
                 logging.info("\"%s\" matched. Found param keys", item)
             else:
                 logging.info("\"%s\" not matched. File key not found", item)
+class XMLFile:
+    def __init__(self, file):
+        self._f = file
+        self._file_keys = []
+        self._param_keys = []
+        self._set_list = []
+        self._set_dict = []
+        # self.generate_param_keys()
+        # self.catch_file_inputs(file)
 
-class ContextTracker:
-    def __init__(self, filename):
-        self.filename = filename
+    def catch_file_inputs(self, file):
+        files = json.loads(file)
 
-    def __enter__(self):
-        logging.info("Entering tracker %s ...", self.filename)
+        logging.info(files)
 
-    def __exit__(self, exc_type, exc_value, trace):
-        logging.info("Exiting tracker %s ...", self.filename)
+    def generate_param_keys(self):
+        x = ['parameters', "configurations" ]
+        for k in x:
+            for i in range(1, len(k)+1):
+                for c in itertools.permutations(k, i):
+                    self._file_keys.append("".join(c))
 
+    def generate_file_keys(self):
+        x = ['file', 'dirs']
+        for k in x:
+            for i in range(1, len(k)+1):
+                for c in itertools.permutations(k, i):
+                    self._file_keys.append("".join(c))
+
+    def _read_file(self) -> None:
+        # f = open(self._f)
+        text = ET.parse(self._f)
+        self.text = text.getroot()
+
+    def read_keys(self) -> None:
+        self._read_file()
+
+        for child in self.text:
+            logging.info("Parsing keys %s : %s", child.tag, child.attrib)
+        
+    def read_values(self) -> None:
+        self._read_file()
+        values = self.text.values()
+        
+        for item in values:
+            logging.info("Reading value : %s", item)
+            if item in self._file_keys:
+                logging.info("\"%s\" matched. found keys file", item)
+            elif item in self._param_keys:
+                logging.info("\"%s\" matched. Found param keys", item)
+            else:
+                logging.info("\"%s\" not matched. File key not found", item)
 class File:
     def __init__(self):
         self._f = None
@@ -1331,16 +1392,20 @@ class File:
 
 
     def run(self):
-        
         logging.info("File detected in %s format", str(self._f.split(".")[-1]))
         logging.info("Read the content ...")
+
         formatter = self._f.split(".")[-1]
+        
         if formatter == "json":
             # config = JSONFile(self._f)
-            self.mainloop()
+            logging.info(JSONFile(self._f).read_keys())
             
-        elif formatter == "xml":
-            pass
+        if formatter == "xml":
+            # config = XMLFile(self._f)
+            logging.info(XMLFile(self._f).read_keys())
+
+        logging.info("Building procedures ... %s", procedure)
 
 def main():
     """ Lies the start time script running"""
@@ -1356,14 +1421,11 @@ def main():
     app = File()
     
     if arg.file is None:
-        app.set_file = "./file/config.json"
+        app.set_file = "./config.json"
     else:
         app.set_file = arg.file
 
     app.run()
-
-    # app = JSONFile("./file/config.json")
-    # app.read_file()
 
     """ Lies the end time script running"""
     end_time = datetime.datetime.now()

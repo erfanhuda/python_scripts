@@ -8,8 +8,8 @@
             "source":"./file/input/mev/ODR.csv", 
             "missing_data": "interpolate",
             "transformation": [
-                {"name": "zscore", "value": 0},
-                {"name": "ln", "formula": "ln(y/(1-y))"}
+                {"id": 1, "name": "zscore", "value": 0},
+                {"id": 2, "name": "ln", "formula": "ln(y/(1-y))"}
             ]
         },
         {
@@ -18,10 +18,11 @@
             "source": "./file/proxy_odr/", 
             "missing_data": "interpolate",
             "transformation": [
-                {"name": "zscore", "value": 0}
+                {"id": 1, "name": "zscore", "value": 0}
             ]
         }
     ],
+    
     "x_variable": [
         {
             "id": 1, 
@@ -29,10 +30,10 @@
             "source":"./file/input/mev/CPI_202306.csv", 
             "missing_data": "interpolate",
             "transformation": [
-                {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
+                {"id": 1, "name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 2, "name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 3, "name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 4, "name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
             ]
         }, 
         {
@@ -41,10 +42,10 @@
             "source":"./file/input/mev/GDP_202306.csv", 
             "missing_data": "interpolate",
             "transformation": [
-                {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
+                {"id": 1, "name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 2, "name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 3, "name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 4, "name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
             ]
         }, 
         {
@@ -53,10 +54,10 @@
             "source":"./file/input/mev/BI7D_202306.csv", 
             "missing_data": "interpolate",
             "transformation": [
-                {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
+                {"id": 1, "name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 2, "name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 3, "name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 4, "name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
             ]
         }, 
         {
@@ -65,10 +66,10 @@
             "source":"./file/input/mev/UNEMPLOYMENT_202306.csv", 
             "missing_data": "interpolate",
             "transformation": [
-                {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
+                {"id": 1, "name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 2, "name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 3, "name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 4, "name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
             ]
         }, 
         {
@@ -77,10 +78,10 @@
             "source":"./file/input/mev/USDIDR_202306.csv", 
             "missing_data": "interpolate",
             "transformation": [
-                {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
+                {"id": 1, "name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 2, "name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 3, "name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 4, "name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
             ]
         }, 
         {
@@ -89,10 +90,10 @@
             "source":"./file/input/mev/SGDIDR_202306.csv", 
             "missing_data": "interpolate",
             "transformation": [
-                {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
-                {"name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
+                {"id": 1, "name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 2, "name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 3, "name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"id": 4, "name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
             ]
         }
     ],
@@ -105,14 +106,15 @@
         ],
         "model_selection": [
             {"id": 1, "name": "AIC", "value": ">60%"},
-            {"id": 2, "name": "BIC", "value": "<5%"}
+            {"id": 2, "name": "BIC", "value": "<5%"},
+            {"id": 3, "name": "p_value", "value": "<5%"}
         ]
     },
 
     "single_factor": {
         "method": "pearson",
         "backtest":[
-            {"name": "in_sample", "start": "31-Jan-2023", "end": "31-May-2023", "mse": "<20%", "mape": "<20%", "rsquare": ">50%"},
+            {"name": "in_sample", "start": "20-Jan-2016", "end": "31-May-2023", "mse": "<20%", "mape": "<20%", "rsquare": ">50%"},
             {"name": "out_sample", "start": "30-Jun-2023", "end": "31-Dec-2023", "mse": "<20%", "mape": "<20%", "rsquare": ">50%"}
         ],
         "model_selection": [
@@ -132,8 +134,8 @@
             {"id": 1, "name": "autocorrelation", "value": ">60%"},
             {"id": 2, "name": "heteroscedasticity", "value": "<5%"},
             {"id": 3, "name": "normality", "value": "<5%"},
-            {"id": 4, "name": "p_value", "value": "<5%"},
-            {"id": 5, "name": "rsquare", "value": ">50%"}
+            {"id": 4, "name": "rsquare", "value": ">50%"},
+            {"id": 5, "name": "p_value", "value": "<5%"}
         ]
     }
 }
