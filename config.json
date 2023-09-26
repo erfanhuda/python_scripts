@@ -7,7 +7,7 @@
             "name": "odr",
             "source":"./file/input/mev/ODR.csv", 
             "missing_data": "interpolate",
-            "extension": [
+            "transformation": [
                 {"name": "zscore", "value": 0},
                 {"name": "ln", "formula": "ln(y/(1-y))"}
             ]
@@ -17,7 +17,7 @@
             "name": "proxy_odr", 
             "source": "./file/proxy_odr/", 
             "missing_data": "interpolate",
-            "extension": [
+            "transformation": [
                 {"name": "zscore", "value": 0}
             ]
         }
@@ -28,7 +28,7 @@
             "name": "cpi",
             "source":"./file/input/mev/CPI_202306.csv", 
             "missing_data": "interpolate",
-            "extension": [
+            "transformation": [
                 {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
                 {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
                 {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
@@ -40,7 +40,7 @@
             "name": "gdp",
             "source":"./file/input/mev/GDP_202306.csv", 
             "missing_data": "interpolate",
-            "extension": [
+            "transformation": [
                 {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
                 {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
                 {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
@@ -52,7 +52,7 @@
             "name": "bi7d",
             "source":"./file/input/mev/BI7D_202306.csv", 
             "missing_data": "interpolate",
-            "extension": [
+            "transformation": [
                 {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
                 {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
                 {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
@@ -64,7 +64,7 @@
             "name": "unemp",
             "source":"./file/input/mev/UNEMPLOYMENT_202306.csv", 
             "missing_data": "interpolate",
-            "extension": [
+            "transformation": [
                 {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
                 {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
                 {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
@@ -76,7 +76,7 @@
             "name": "usdidr",
             "source":"./file/input/mev/USDIDR_202306.csv", 
             "missing_data": "interpolate",
-            "extension": [
+            "transformation": [
                 {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
                 {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
                 {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
@@ -88,7 +88,7 @@
             "name": "sgdidr",
             "source":"./file/input/mev/SGDIDR_202306.csv", 
             "missing_data": "interpolate",
-            "extension": [
+            "transformation": [
                 {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
                 {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
                 {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},

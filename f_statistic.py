@@ -1171,7 +1171,6 @@ class JSONFile:
             else:
                 logging.info("\"%s\" not matched. File key not found", item)
 
-
 class ContextTracker:
     def __init__(self, filename):
         self.filename = filename
