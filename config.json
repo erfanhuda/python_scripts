@@ -22,7 +22,7 @@
             ]
         }
     ],
-    
+
     "x_variable": [
         {
             "id": 1, 
@@ -106,7 +106,7 @@
         ],
         "model_selection": [
             {"id": 1, "name": "AIC", "value": ">60%"},
-            {"id": 2, "name": "BIC", "value": "<5%"},
+            {"id": 2, "name": "adf", "value": "<5%"},
             {"id": 3, "name": "p_value", "value": "<5%"}
         ]
     },

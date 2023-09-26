@@ -2,7 +2,7 @@ import itertools
 from dataclasses import dataclass, field
 import os
 import argparse
-from matplotlib.path import Path
+from pathlib import Path
 import pandas as pd
 import numpy as np
 import pmdarima as pm
@@ -21,6 +21,8 @@ import logging
 import datetime
 
 import collections
+
+from typing import Callable
 
 Base = collections.namedtuple("base", ['key', 'type'])
 
@@ -874,6 +876,16 @@ class Extend:
 class Correlation:
     _m = "pearsonr_corr"
 
+    _default = [pearsonr_corr, pearsonr_pval]
+    _keys = {
+        "kendall_pval": kendall_pval,
+        "pearsonr_pval": pearsonr_pval,
+        "spearmanr_pval": spearmanr_pval,
+        "kendall_corr": kendall_corr,
+        "pearsonr_corr": pearsonr_corr,
+        "spearmanr_corr": spearmanr_corr
+    }
+
     def kendall_pval(x, y):
         logging.info("Running Kendall Tau p_value")
         return kendalltau(x,y)[1]
@@ -902,6 +914,26 @@ class Forecast:
     _p = []
     _m = (None, "auto-arima", (10, 2, 10, 0))
     _o = (10, 2, 10, 0)
+
+    _default = [split_data, do_acf_testing, do_pacf_testing, auto_arima_test]
+    _keys = {
+        "orders": set_orders,
+        "split_data": split_data,
+        "acf": do_acf_testing,
+        "pacf": do_pacf_testing,
+        "arima": manual_arima_test,
+        "auto_arima": auto_arima_test,
+        "autoregression": AutoRegression,
+        "moving_average": MovingAverage,
+        "arma": ARMA,
+        "arima": ARIMA,
+        "sarima": SARIMA,
+        "sarimax": SARIMAX,
+        "var": VARMA,
+        "varmax": VARMAX,
+        "simple_exponential": SES,
+        "holt_winter": HWES
+    }
     
     def set_orders(types="ARIMA", p=10, d=2, q=10, m=0):
         p = range(p)
@@ -1127,8 +1159,51 @@ class Forecast:
         # make prediction
         yhat = model_fit.predict(len(data), len(data))
         print(yhat)
+@dataclass
+class FileHandler:
+    name: str = field(default=None)
+
+    def __post_init__(self):
+        if os.path.exists(self.name):
+            return True
+        elif self.name is None:
+            logging.warning("File not setup properly")
+        else:
+            raise FileNotFoundError(self.name)
+@dataclass
+class DirHandler:
+    name: str = field(default=None)
+
+    def __post_init__(self):
+        if os.path.exists(self.name):
+            return True
+        elif self.name is None:
+            logging.warning("Directory not setup properly")
+        else:
+            raise FileNotFoundError(self.name)
+@dataclass
+class Statistic:
+    name: str = field(default=None)
+    method: str = field(default=None)
+    func: Callable[[int], int] = field(default=None)
+@dataclass
+class StatisticalProcedure:
+    proc: Statistic
+    output: FileHandler
+    parameters: list = field(default_factory=[dict])
+    backtest: list = field(default_factory=[dict])
+    model_selection : list = field(default_factory=[dict])
+@dataclass
+class StatisticalOutputProcedure:
+    name: FileHandler
+    statistical: StatisticalProcedure
+    files: list = field(default_factory=[StatisticalProcedure])
+    dirs: list = field(default_factory=[DirHandler])
 
 procedure = collections.deque()
+
+class KeyValidator:
+    pass
 class JSONFile:
     def __init__(self, file):
         self._f = file
@@ -1136,13 +1211,7 @@ class JSONFile:
         self._param_keys = []
         self._set_list = []
         self._set_dict = []
-        # self.generate_param_keys()
-        # self.catch_file_inputs(file)
-
-    def catch_file_inputs(self, file):
-        files = json.loads(file)
-
-        logging.info(files)
+        self._cwd = None
 
     def generate_param_keys(self):
         x = ['parameters', "configurations" ]
@@ -1177,6 +1246,17 @@ class JSONFile:
                 logging.info("Reading key dict : %s. Found %s pair subkeys", item[0], len(item[1].keys()))
                 self._set_dict.append({item[0] : item[1]})
                 procedure.append(item[0])
+            
+            elif isinstance(item[1], str):
+                logging.info("Reading key : %s. Validating ...", item[0])
+
+                if os.path.exists(item[1]):
+                    self._cwd = item[1]
+                    logging.info("Get output dir on : %s. Success validation", item[0])
+                else:
+                    logging.error("Cannot get output dir on : %s. Fail validation", item[0])
+                    raise FileExistsError
+
         
     def read_values(self) -> None:
         self._read_file()
@@ -1197,13 +1277,6 @@ class XMLFile:
         self._param_keys = []
         self._set_list = []
         self._set_dict = []
-        # self.generate_param_keys()
-        # self.catch_file_inputs(file)
-
-    def catch_file_inputs(self, file):
-        files = json.loads(file)
-
-        logging.info(files)
 
     def generate_param_keys(self):
         x = ['parameters', "configurations" ]
@@ -1229,6 +1302,21 @@ class XMLFile:
 
         for child in self.text:
             logging.info("Parsing keys %s : %s", child.tag, child.attrib)
+
+        main_procedure = procedure
+        sub_procedure = collections.deque()
+        parameters = collections.deque()
+
+        for item in main_procedure:
+            logging.info("Building procedures ... %s", item)
+            for subitem in item:
+                logging.info(subitem)
+                if isinstance(subitem, list):
+                    sub_procedure.append(subitem)
+                    logging.info("Building sub procedure ... %s", subitem)
+                elif isinstance(subitem, dict):
+                    parameters.append(subitem)
+                    logging.info("Building procedure parameters ... %s", subitem)
         
     def read_values(self) -> None:
         self._read_file()
@@ -1242,7 +1330,7 @@ class XMLFile:
                 logging.info("\"%s\" matched. Found param keys", item)
             else:
                 logging.info("\"%s\" not matched. File key not found", item)
-class File:
+class App:
     def __init__(self):
         self._f = None
         self._p = None
@@ -1358,6 +1446,9 @@ class File:
                 logging.info("Finished exporting to {}".format(path))
         else: 
             raise TypeError("No parameter for file type match.")
+        
+    def build_procedure(self):
+        pass
 
     def mainloop(self):
         files = self.parsing_file_config()
@@ -1390,7 +1481,6 @@ class File:
         pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
         # self.export_corr_and_variables(label=label, dirs=files['dirs'], odrs=odrs, corr_odrs=corr_odrs, pval_odrs=pval_odrs)
 
-
     def run(self):
         logging.info("File detected in %s format", str(self._f.split(".")[-1]))
         logging.info("Read the content ...")
@@ -1398,14 +1488,12 @@ class File:
         formatter = self._f.split(".")[-1]
         
         if formatter == "json":
-            # config = JSONFile(self._f)
-            logging.info(JSONFile(self._f).read_keys())
+            config = JSONFile(self._f)
+            logging.info(config.read_keys())
             
         if formatter == "xml":
-            # config = XMLFile(self._f)
-            logging.info(XMLFile(self._f).read_keys())
-
-        logging.info("Building procedures ... %s", procedure)
+            config = XMLFile(self._f)
+            logging.info(config.read_keys())
 
 def main():
     """ Lies the start time script running"""
@@ -1418,12 +1506,14 @@ def main():
     arg = parser.parse_args()
 
     """ Lies the main runner program """
-    app = File()
+    app = App()
     
     if arg.file is None:
         app.set_file = "./config.json"
+        working_path = Path(app.set_file).absolute()
     else:
         app.set_file = arg.file
+        working_path = Path(app.set_file).absolute()
 
     app.run()
 
