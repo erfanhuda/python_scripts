@@ -1,88 +1,139 @@
 {   
-    
-    "file": {
-        "odr": ["./file/input/mev/ODR.csv"],
-        "mev": ["./file/input/mev/CPI_202306.csv", "./file/input/mev/GDP_202306.csv", "./file/input/mev/BI7D_202306.csv", "./file/input/mev/UNEMPLOYMENT_202306.csv", "./file/input/mev/USDIDR_202306.csv", "./file/input/mev/SGDIDR_202306.csv"],
-        "proxy_odr": "./file/proxy_odr/",
-        "output": "./file/output/"
-    },
-    "configuration": {
-        "variable": {
-            "freq": "M",
-            "combination": 3,
-            "y": {
-                "base": ["odr_balance"],
-                "extend": {
-                    "z_score": 10
-                },
-                "missing_data": "interpolate",
-                "use": ["base", "extend"]
-            },
-            "x": {
-                "base": ["cpi", "gdp", "bi7d"],
-                "extend": {
-                    "growth": 10,
-                    "lag": "1Q"
-                },
-                "missing_data": "interpolate",
-                "use": ["base", "extend"]
-            }
+    "output_dir": "./file/output/",
+
+    "y_variable": [
+        {
+            "id": 1, 
+            "name": "odr",
+            "source":"./file/input/mev/ODR.csv", 
+            "missing_data": "interpolate",
+            "extension": [
+                {"name": "zscore", "value": 0},
+                {"name": "ln", "formula": "ln(y/(1-y))"}
+            ]
         },
-        "forecast_model": {
-            "method": "arima",
-            "test": [],
-            "parameters": 0,
-            "in_sample": ["31-Jan-2023","31-May-2023"],
-            "out_sample": ["30-Jun-2023","31-Aug-2023"]
-        },
-        "correlation_model": {
-            "method": "pearson",
-            "test": ["covariance"],
-            "parameters": 0, 
-            "in_sample": ["31-Jan-2023","31-May-2023"],
-            "out_sample": ["30-Jun-2023","31-Aug-2023"]
-        },
-        "regression_model": {
-            "method": "linear regression",
-            "test": ["autocorrelation", "heteroscedasticity", "normality"],
-            "y": ["odr_balance"],
-            "x": [],
-            "in_sample": ["31-Jan-2023","31-May-2023"],
-            "out_sample": ["30-Jun-2023","31-Aug-2023"]
-        },
-        "forecast": {
-            "plot": true,
-            "log": true,
-            "method": "",
-            "config": {
-                "fitted_model": [],
-                "range_fitted": [[0,0,0], [9,9,9]],
-                "training": ["31-Jan-2023","31-May-2023"],
-                "test": ["30-Jun-2023","31-Aug-2050"]
-            },
-            "parameters": {
-                "p_value": "0.05"
-            }
-        },
-        "ols": {
-            "plot": true,
-            "log": true,
-            "stepwise": ["autocorrelation", "heteroscedasticity", "normality"],
-            "parameters": {
-                "p_value": "0.05",
-                "mape": "0.5",
-                "mse": "0.5"
-            }
-        },
-        "regression": {
-            "name": "normal",
-            "plot": true,
-            "log": true,
-            "parameters": {
-                "p_value": "0.05",
-                "mape": "0.5",
-                "mse": "0.5"
-            }
+        {
+            "id": 2, 
+            "name": "proxy_odr", 
+            "source": "./file/proxy_odr/", 
+            "missing_data": "interpolate",
+            "extension": [
+                {"name": "zscore", "value": 0}
+            ]
         }
+    ],
+    "x_variable": [
+        {
+            "id": 1, 
+            "name": "cpi",
+            "source":"./file/input/mev/CPI_202306.csv", 
+            "missing_data": "interpolate",
+            "extension": [
+                {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
+            ]
+        }, 
+        {
+            "id": 2, 
+            "name": "gdp",
+            "source":"./file/input/mev/GDP_202306.csv", 
+            "missing_data": "interpolate",
+            "extension": [
+                {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
+            ]
+        }, 
+        {
+            "id": 3, 
+            "name": "bi7d",
+            "source":"./file/input/mev/BI7D_202306.csv", 
+            "missing_data": "interpolate",
+            "extension": [
+                {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
+            ]
+        }, 
+        {
+            "id": 4, 
+            "name": "unemp",
+            "source":"./file/input/mev/UNEMPLOYMENT_202306.csv", 
+            "missing_data": "interpolate",
+            "extension": [
+                {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
+            ]
+        }, 
+        {
+            "id": 5, 
+            "name": "usdidr",
+            "source":"./file/input/mev/USDIDR_202306.csv", 
+            "missing_data": "interpolate",
+            "extension": [
+                {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
+            ]
+        }, 
+        {
+            "id": 6, 
+            "name": "sgdidr",
+            "source":"./file/input/mev/SGDIDR_202306.csv", 
+            "missing_data": "interpolate",
+            "extension": [
+                {"name": "lag", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "lead", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "growth", "value": ["1Q", "2Q", "3Q", "4Q"]},
+                {"name": "delta", "value": ["base_1Q", "base_2Q", "base_3Q", "base_4Q"]}
+            ]
+        }
+    ],
+
+    "forecast": {
+        "method": "auto_arima",
+        "backtest":[
+            {"name": "in_sample", "start": "31-Jan-2023", "end": "31-May-2023", "mse": "<20%", "mape": "<20%", "rsquare": ">50%"},
+            {"name": "out_sample", "start": "30-Jun-2023", "end": "31-Dec-2023", "mse": "<20%", "mape": "<20%", "rsquare": ">50%"}
+        ],
+        "model_selection": [
+            {"id": 1, "name": "AIC", "value": ">60%"},
+            {"id": 2, "name": "BIC", "value": "<5%"}
+        ]
+    },
+
+    "single_factor": {
+        "method": "pearson",
+        "backtest":[
+            {"name": "in_sample", "start": "31-Jan-2023", "end": "31-May-2023", "mse": "<20%", "mape": "<20%", "rsquare": ">50%"},
+            {"name": "out_sample", "start": "30-Jun-2023", "end": "31-Dec-2023", "mse": "<20%", "mape": "<20%", "rsquare": ">50%"}
+        ],
+        "model_selection": [
+            {"id": 1, "name": "correlation", "value": ">60%"},
+            {"id": 2, "name": "p_value", "value": "<5%"}
+        ]
+    },
+
+    "multiple_factor": {
+        "method": "multiple_regression",
+        "combination": 3,
+        "backtest":[
+            {"name": "in_sample", "start": "31-Jan-2023", "end": "31-May-2023","mse": "<20%", "mape": "<20%", "rsquare": ">50%"},
+            {"name": "out_sample", "start": "30-Jun-2023", "end": "31-Dec-2023","mse": "<20%", "mape": "<20%", "rsquare": ">50%"}
+        ],
+        "model_selection": [
+            {"id": 1, "name": "autocorrelation", "value": ">60%"},
+            {"id": 2, "name": "heteroscedasticity", "value": "<5%"},
+            {"id": 3, "name": "normality", "value": "<5%"},
+            {"id": 4, "name": "p_value", "value": "<5%"},
+            {"id": 5, "name": "rsquare", "value": ">50%"}
+        ]
     }
 }

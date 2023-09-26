@@ -19,6 +19,9 @@ import json
 import logging
 import datetime
 
+from collections import namedtuple
+
+_base = namedtuple("_base", ['key', 'value'])
 warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - Seabank Finpro - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
 
@@ -1047,6 +1050,7 @@ class Forecast:
             row = [v1, v2]
             data.append(row)
         # fit model
+
         model = VAR(data)
         model_fit = model.fit()
         # make prediction
@@ -1117,15 +1121,55 @@ class Forecast:
         yhat = model_fit.predict(len(data), len(data))
         print(yhat)
 
+class ParamConfig:
+    def __init__(self):
+        self._p = namedtuple('Parameters', ['key', 'value'])
+class FileConfig:
+    def __init__(self):
+        self._f = namedtuple("FileConfig", ['input_file', 'output_file'])
+
 class JSONFile:
     def __init__(self, file):
-        # self._f = file
-        self.catch_file_inputs(file)
+        self._f = file
+        self._file_keys = []
+        self._param_keys = []
+        self.generate_file_keys()
+        # self.generate_param_keys()
+        # self.catch_file_inputs(file)
 
     def catch_file_inputs(self, file):
         files = json.loads(file)
 
         logging.info(files)
+
+    def generate_param_keys(self):
+        x = ['parameters', "configurations" ]
+        for k in x:
+            for i in range(1, len(k)+1):
+                for c in itertools.permutations(k, i):
+                    self._file_keys.append("".join(c))
+
+    def generate_file_keys(self):
+        x = ['file', 'dirs']
+        for k in x:
+            for i in range(1, len(k)+1):
+                for c in itertools.permutations(k, i):
+                    self._file_keys.append("".join(c))
+
+    def read_file(self):
+        f = open(self._f)
+        text = json.load(f)
+        # text = namedtuple("base_parser", ["file", "test"])
+        keys = text.keys()
+        values = text.values()
+        
+        for item in keys:
+            if item in self._file_keys:
+                logging.info("\"%s\" matched. found keys file", item)
+            elif item in self._param_keys:
+                logging.info("\"%s\" matched. Found param keys", item)
+            else:
+                logging.info("\"%s\" not matched. File key not found", item)
 
 
 class ContextTracker:
@@ -1318,6 +1362,9 @@ def main():
         app.set_file = arg.file
 
     app.run()
+
+    # app = JSONFile("./file/config.json")
+    # app.read_file()
 
     """ Lies the end time script running"""
     end_time = datetime.datetime.now()
