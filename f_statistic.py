@@ -22,7 +22,7 @@ import datetime
 
 import collections
 
-from typing import Callable
+from typing import Any, Callable
 
 Base = collections.namedtuple("base", ['key', 'type'])
 
@@ -1200,163 +1200,12 @@ class StatisticalOutputProcedure:
     files: list = field(default_factory=[StatisticalProcedure])
     dirs: list = field(default_factory=[DirHandler])
 
-procedure = collections.deque()
-
-class KeyValidator:
-    pass
-class JSONFile:
-    def __init__(self, file):
-        self._f = file
-        self._file_keys = []
-        self._param_keys = []
-        self._set_list = []
-        self._set_dict = []
-        self._cwd = None
-
-    def generate_param_keys(self):
-        x = ['parameters', "configurations" ]
-        for k in x:
-            for i in range(1, len(k)+1):
-                for c in itertools.permutations(k, i):
-                    self._file_keys.append("".join(c))
-
-    def generate_file_keys(self):
-        x = ['file', 'dirs']
-        for k in x:
-            for i in range(1, len(k)+1):
-                for c in itertools.permutations(k, i):
-                    self._file_keys.append("".join(c))
-
-    def _read_file(self) -> None:
-        f = open(self._f)
-        text = json.load(f)
-        self.text = text
-
-    def read_keys(self) -> None:
-        self._read_file()
-        items = self.text.items()
-
-        for item in items:
-            if isinstance(item[1], list):
-                logging.info("Reading key list : %s. Found %s length values", item[0], len(item[1]))
-                self._set_list.append({item[0] : item[1]})
-                procedure.append(item[0])
-
-            elif isinstance(item[1], dict):
-                logging.info("Reading key dict : %s. Found %s pair subkeys", item[0], len(item[1].keys()))
-                self._set_dict.append({item[0] : item[1]})
-                procedure.append(item[0])
-            
-            elif isinstance(item[1], str):
-                logging.info("Reading key : %s. Validating ...", item[0])
-
-                if os.path.exists(item[1]):
-                    self._cwd = item[1]
-                    logging.info("Get output dir on : %s. Success validation", item[0])
-                else:
-                    logging.error("Cannot get output dir on : %s. Fail validation", item[0])
-                    raise FileExistsError
-
-        
-    def read_values(self) -> None:
-        self._read_file()
-        values = self.text.values()
-        
-        for item in values:
-            logging.info("Reading value : %s", item)
-            if item in self._file_keys:
-                logging.info("\"%s\" matched. found keys file", item)
-            elif item in self._param_keys:
-                logging.info("\"%s\" matched. Found param keys", item)
-            else:
-                logging.info("\"%s\" not matched. File key not found", item)
-class XMLFile:
-    def __init__(self, file):
-        self._f = file
-        self._file_keys = []
-        self._param_keys = []
-        self._set_list = []
-        self._set_dict = []
-
-    def generate_param_keys(self):
-        x = ['parameters', "configurations" ]
-        for k in x:
-            for i in range(1, len(k)+1):
-                for c in itertools.permutations(k, i):
-                    self._file_keys.append("".join(c))
-
-    def generate_file_keys(self):
-        x = ['file', 'dirs']
-        for k in x:
-            for i in range(1, len(k)+1):
-                for c in itertools.permutations(k, i):
-                    self._file_keys.append("".join(c))
-
-    def _read_file(self) -> None:
-        # f = open(self._f)
-        text = ET.parse(self._f)
-        self.text = text.getroot()
-
-    def read_keys(self) -> None:
-        self._read_file()
-
-        for child in self.text:
-            logging.info("Parsing keys %s : %s", child.tag, child.attrib)
-
-        main_procedure = procedure
-        sub_procedure = collections.deque()
-        parameters = collections.deque()
-
-        for item in main_procedure:
-            logging.info("Building procedures ... %s", item)
-            for subitem in item:
-                logging.info(subitem)
-                if isinstance(subitem, list):
-                    sub_procedure.append(subitem)
-                    logging.info("Building sub procedure ... %s", subitem)
-                elif isinstance(subitem, dict):
-                    parameters.append(subitem)
-                    logging.info("Building procedure parameters ... %s", subitem)
-        
-    def read_values(self) -> None:
-        self._read_file()
-        values = self.text.values()
-        
-        for item in values:
-            logging.info("Reading value : %s", item)
-            if item in self._file_keys:
-                logging.info("\"%s\" matched. found keys file", item)
-            elif item in self._param_keys:
-                logging.info("\"%s\" matched. Found param keys", item)
-            else:
-                logging.info("\"%s\" not matched. File key not found", item)
-class App:
+class Core:
     def __init__(self):
         self._f = None
         self._p = None
         self._logfile = None
         self._output = None
-
-    @property
-    def set_file(self):
-        return self._f
-    
-    @set_file.setter
-    def set_file(self, file):
-        logging.info("Read parameter %s ...", str(file))
-
-        if not isinstance(file, str):
-            raise ValueError("File must be a string")
-        
-        if not os.path.exists(file):
-            logging.error("File not found %s", str(file))
-            raise FileNotFoundError(file)
-        
-        self._p = os.path.abspath(file)
-        self._f = os.path.basename(file)
-
-        logging.info("File: %s", self._f)
-        logging.info("Location: %s", self._p)
 
     def parsing_config(self):
         """ Parsing the stepwise and parameters configuration """
@@ -1479,6 +1328,297 @@ class App:
 
         corr_odrs = [x.corr() for x in odrs]
         pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
+        self.export_corr_and_variables(label=label, dirs=files['dirs'], odrs=odrs, corr_odrs=corr_odrs, pval_odrs=pval_odrs)
+
+procedure = collections.deque()
+
+class KeyValidator:
+    _k = {"y_variable", "x_variable", "forecast", "single_factor", "multiple_factor"}
+    _o_dir = "/output"
+class JSONFile:
+    _ext = ".json"
+
+    def __init__(self, file):
+        self._f = file
+        self._file_keys = []
+        self._param_keys = []
+        self._set_list = []
+        self._set_dict = []
+        self._cwd = None
+
+    def generate_param_keys(self):
+        x = ['parameters', "configurations" ]
+        for k in x:
+            for i in range(1, len(k)+1):
+                for c in itertools.permutations(k, i):
+                    self._file_keys.append("".join(c))
+
+    def generate_file_keys(self):
+        x = ['file', 'dirs']
+        for k in x:
+            for i in range(1, len(k)+1):
+                for c in itertools.permutations(k, i):
+                    self._file_keys.append("".join(c))
+
+    def _read_file(self) -> None:
+        f = open(self._f)
+        text = json.load(f)
+        self.text = text
+
+    def read_keys(self) -> None:
+        self._read_file()
+        items = self.text.items()
+
+        for item in items:
+            if isinstance(item[1], list):
+                logging.info("Reading key list : %s. Found %s length values", item[0], len(item[1]))
+                self._set_list.append({item[0] : item[1]})
+                procedure.append(item[0])
+
+            elif isinstance(item[1], dict):
+                logging.info("Reading key dict : %s. Found %s pair subkeys", item[0], len(item[1].keys()))
+                self._set_dict.append({item[0] : item[1]})
+                procedure.append(item[0])
+            
+            elif isinstance(item[1], str):
+                logging.info("Reading key : %s. Validating ...", item[0])
+
+                if os.path.exists(item[1]):
+                    self._cwd = item[1]
+                    logging.info("Get output dir on : %s. Success validation", item[0])
+                else:
+                    logging.error("Cannot get output dir on : %s. Fail validation", item[0])
+                    raise FileExistsError
+
+        
+    def read_values(self) -> None:
+        self._read_file()
+        values = self.text.values()
+        
+        for item in values:
+            logging.info("Reading value : %s", item)
+            if item in self._file_keys:
+                logging.info("\"%s\" matched. found keys file", item)
+            elif item in self._param_keys:
+                logging.info("\"%s\" matched. Found param keys", item)
+            else:
+                logging.info("\"%s\" not matched. File key not found", item)
+class XMLFile:
+    _ext = ".xml"
+    def __init__(self, file):
+        self._f = file
+        self._file_keys = []
+        self._param_keys = []
+        self._set_list = []
+        self._set_dict = []
+
+    def generate_param_keys(self):
+        x = ['parameters', "configurations" ]
+        for k in x:
+            for i in range(1, len(k)+1):
+                for c in itertools.permutations(k, i):
+                    self._file_keys.append("".join(c))
+
+    def generate_file_keys(self):
+        x = ['file', 'dirs']
+        for k in x:
+            for i in range(1, len(k)+1):
+                for c in itertools.permutations(k, i):
+                    self._file_keys.append("".join(c))
+
+    def _read_file(self) -> None:
+        # f = open(self._f)
+        text = ET.parse(self._f)
+        self.text = text.getroot()
+
+    def read_keys(self) -> None:
+        self._read_file()
+
+        for child in self.text:
+            logging.info("Parsing keys %s : %s", child.tag, child.attrib)
+
+        main_procedure = procedure
+        sub_procedure = collections.deque()
+        parameters = collections.deque()
+
+        for item in main_procedure:
+            logging.info("Building procedures ... %s", item)
+            for subitem in item:
+                logging.info(subitem)
+                if isinstance(subitem, list):
+                    sub_procedure.append(subitem)
+                    logging.info("Building sub procedure ... %s", subitem)
+                elif isinstance(subitem, dict):
+                    parameters.append(subitem)
+                    logging.info("Building procedure parameters ... %s", subitem)
+        
+    def read_values(self) -> None:
+        self._read_file()
+        values = self.text.values()
+        
+        for item in values:
+            logging.info("Reading value : %s", item)
+            if item in self._file_keys:
+                logging.info("\"%s\" matched. found keys file", item)
+            elif item in self._param_keys:
+                logging.info("\"%s\" matched. Found param keys", item)
+            else:
+                logging.info("\"%s\" not matched. File key not found", item)
+class ExcelFile:
+    """ Interpret the file format of Excel"""
+    _ext = ".xlsx"
+    pass
+
+class CSVFile:
+    """ Interpret the file format of CSV"""
+    _ext = ".csv"
+    pass
+class App:
+    def __init__(self):
+        self._f = None
+        self._p = None
+        self._logfile = None
+        self._output = None
+
+    @property
+    def set_file(self):
+        return self._f
+    
+    @set_file.setter
+    def set_file(self, file):
+        logging.info("Read parameter %s ...", str(file))
+
+        if not isinstance(file, str):
+            raise ValueError("File must be a string")
+        
+        if not os.path.exists(file):
+            logging.error("File not found %s", str(file))
+            raise FileNotFoundError(file)
+        
+        self._p = os.path.abspath(file)
+        self._f = os.path.basename(file)
+
+        logging.info("File: %s", self._f)
+        logging.info("Location: %s", self._p)
+
+    def parsing_config(self):
+        """ Parsing the stepwise and parameters configuration """
+        with open(self._p) as f:
+            config_file = json.load(f)
+
+            try:
+                _config = [x for x in config_file['configuration'].items()]
+                y_base = [y.lower() for y in config_file['configuration']['variable']['y']['base']]
+                x_base = [x.lower() for x in config_file['configuration']['variable']['x']['base']]
+                y_ext = [y.lower() for y in config_file['configuration']['variable']['y']['extend'].keys()]
+                x_ext = [x.lower() for x in config_file['configuration']['variable']['x']['extend'].keys()]
+                y_ext_params = [str(y).lower() for y in config_file['configuration']['variable']['y']['extend'].values()]
+                x_ext_params = [str(x).lower() for x in config_file['configuration']['variable']['x']['extend'].values()]
+                
+                """ List of Transformations Features """
+                _fe = {"growth": "_g", "delta": "_d", "exponential": "_exp", "variance": "_v", "lag": "_lag", "lead": "_lea", "z_score": "_z", "simple_ma": "_sma", "cumulative_ma": "_cma", "exponential_ma": "_ema", "ln": "_ln", "logbase": "_lb", "logit": "_logit"}
+                _fr = {"day": "d", "monthly": "m", "quarterly": "q", "semesterly": "h", "yearly": "y"}
+
+                print(x_ext, x_ext_params)
+
+            except BaseException: 
+                logging.error("Coba cek lagi section untuk konfigurasinya.")
+
+    def parsing_file_config(self):
+        with open(self._p) as f:
+            config_file = json.load(f)
+
+            try:
+                _parse = [item for item in config_file['file'].items()]
+                files = {f"{item[0]}_files": item[1] for item in config_file['file'].items() if isinstance(item[1], list)}
+                dirs = {f"{item[0]}_dir": item[1] for item in config_file['file'].items() if isinstance(item[1], str)}
+
+                for item in _parse:
+                    if isinstance(item[1], list): 
+                        logging.info("Found file configurations of {}. Setting up {} files".format(item[0], len(item[1])))
+                        logging.info("Registered files : {}".format(", ".join(item[1])))
+                    elif isinstance(item[1], str):
+                        logging.info("Found directory configurations of {}. Setting up {} directories".format(item[0], item[1]))
+                        logging.info("Registered directories : {}".format(item[1]))
+                    else:
+                        raise TypeError("No files or directories found")
+
+                return {"files": files, "dirs" : dirs}
+            
+            except KeyError as e:
+                logging.warning(f"Key configuration for {e} not found")
+
+            except FileNotFoundError as e:
+                logging.error(f"Location in {e} not found. Check again the files or directories in configuration file")
+
+            except BaseException:
+                logging.error("Sorry, cannot setup the configuration files. Please check the input and output section again.")
+
+            except:
+                logging.error("Something went wrong.")
+
+    """ Handling output operations """
+    def export_odr(odrs):
+        """ Handling export to file """
+        for i in range(len(odrs)):
+            odrs[i].to_csv(f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
+
+    def export_corr_and_variables(self, label, dirs, odrs, corr_odrs, pval_odrs, types="excel"):
+        
+        if types == "excel":
+            for item in range(len(label)):
+                path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}.xlsx"
+
+                with pd.ExcelWriter(path) as writer:
+                    logging.info("Exporting {}".format(path))
+                    odrs[item].to_excel(writer, sheet_name="variables")
+                    corr_odrs[item].to_excel(writer, sheet_name="correlation")
+                    pval_odrs[item].to_excel(writer, sheet_name="corr_pvalue")
+
+                logging.info("Finished exporting to {}".format(path))
+
+        elif types == "csv":
+            for item in range(len(label)):
+                path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}"
+
+                logging.info("Exporting {}".format(path))
+                odrs[item].to_csv(f"{path}_odrs.csv")
+                corr_odrs[item].to_csv(f"{path}_corr_odrs.csv")
+                pval_odrs[item].to_csv(f"{path}_pval_odrs.csv")
+
+                logging.info("Finished exporting to {}".format(path))
+        else: 
+            raise TypeError("No parameter for file type match.")
+        
+    def mainloop(self):
+        files = self.parsing_file_config()
+        config = self.parsing_config()
+        # print(x_extension)
+        # print(x_base)
+        proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
+        odr = pd.read_csv(files['files']['odr_files'][0], index_col=["qoq_date", "pt_date","pd_segment", "tenor"],parse_dates=['qoq_date', 'pt_date'])
+
+        mev_combine = [pd.read_csv(file, low_memory=True, parse_dates=['Date']) for file in files['files']['mev_files']]
+        mev_combine = [data.set_index("Date") for data in mev_combine]
+        mev_combine = fill_last_value(mev_combine)
+        mev_combine = mev_combine.loc[mev_combine.index == mev_combine.index.to_period('M').to_timestamp('M')]
+
+        """Execution Proxy ODR"""
+        fill_odr = proxy_odr.iloc[:].ffill()
+
+        """Execution ODR """
+        group = odr.groupby(level=["pd_segment", "tenor"])
+        odrs = [group.get_group(x) for x in group.groups]
+
+        """Execution combination variables Between ODR and MEV"""
+        transform_zscore(odrs)
+        odrs = [odr.reset_index().set_index('qoq_date') for odr in odrs]
+        odrs = [pd.concat([odr, mev_combine], axis=1).ffill().fillna(0) for odr in odrs]
+        label = [(odr['pd_segment'].iloc[-1], odr['tenor'].iloc[-1]) for odr in odrs]
+        odrs = [x.drop(['pt_date', 'pd_segment', 'tenor'], axis=1) for x in odrs]
+
+        corr_odrs = [x.corr() for x in odrs]
+        pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
         # self.export_corr_and_variables(label=label, dirs=files['dirs'], odrs=odrs, corr_odrs=corr_odrs, pval_odrs=pval_odrs)
 
     def run(self):
@@ -1486,14 +1626,17 @@ class App:
         logging.info("Read the content ...")
 
         formatter = self._f.split(".")[-1]
+        working_path = Path(self._f).absolute()
         
         if formatter == "json":
             config = JSONFile(self._f)
             logging.info(config.read_keys())
+            self.mainloop()
             
         if formatter == "xml":
             config = XMLFile(self._f)
             logging.info(config.read_keys())
+            self.mainloop()
 
 def main():
     """ Lies the start time script running"""
@@ -1510,10 +1653,8 @@ def main():
     
     if arg.file is None:
         app.set_file = "./config.json"
-        working_path = Path(app.set_file).absolute()
     else:
         app.set_file = arg.file
-        working_path = Path(app.set_file).absolute()
 
     app.run()
 
