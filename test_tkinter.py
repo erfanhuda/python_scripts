@@ -1,70 +1,79 @@
 import tkinter as tk
-from tkinter import BOTH, ttk
+from tkinter import BOTH, PhotoImage, ttk
 from abc import ABC
 
-# import sv_ttk
-import platform
+import sv_ttk
 
-class InterfaceTitleBar(ABC):
-    def __init__(self):
-        self.system = platform.system()
-        self.machine = platform.machine()
-        self.os = platform.platform()
-        self.uname = platform.uname()
-        
-        self.TITLE_BAR_COLOR = 0x000e0e0e
-        self.TITLE_TEXT_COLOR = 0x00FFFFFF
-        self.set_title_bar()
 
-    def set_title_bar(self):
-        try:
-            print(self.system)
-            match self.system:
-                case "Windows": 
-                    from ctypes import windll, byref, sizeof, c_int
-                    HWND = windll.user32.GetParent(self.winfo_id())
-                    windll.dwmapi.DwmSetWindowAttribute(HWND, 35, byref(c_int(self.TITLE_BAR_COLOR)),sizeof(c_int))
-                case "Darwin": pass
-                case "Java": pass
-                case "Linux": pass
+class FloatingWindow(tk.Toplevel):
+    def __init__(self, *args, **kwargs):
+        tk.Toplevel.__init__(self, *args, **kwargs)
+        self.overrideredirect(True)
 
-        except Exception as e:
-            print(e)
+        self.label = tk.Label(self, text="Click on the grip to move")
+        self.grip = tk.Label(self, bitmap="gray25")
+        self.grip.pack(side="left", fill="y")
+        self.label.pack(side="right", fill="both", expand=True)
+
+        self.grip.bind("<ButtonPress-1>", self.start_move)
+        self.grip.bind("<ButtonRelease-1>", self.stop_move)
+        self.grip.bind("<B1-Motion>", self.do_move)
+
+    def start_move(self, event):
+        self.x = event.x
+        self.y = event.y
+
+    def stop_move(self, event):
+        self.x = None
+        self.y = None
+
+    def do_move(self, event):
+        deltax = event.x - self.x
+        deltay = event.y - self.y
+        x = self.winfo_x() + deltax
+        y = self.winfo_y() + deltay
+        self.geometry(f"+{x}+{y}")
+
+class MainWindow(tk.Tk):
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+        self.geometry("500x500")
 
 class App(tk.Tk):
     def __init__(self, *args, **kwargs):
-        super().__init__()
-        self.geometry("800x600")
-        self.title("Seabank Finpro Dashboard")
-        # self.overrideredirect(True)
-        # sv_ttk.set_theme("dark")
+        tk.Tk.__init__(self)
+        self.iconbitmap("logo/logo-sea.ico")
+        self.title("Seabank Modeling")
+        self.geometry("500x500")
+        
+        # Tab Navigation
+        self.tabs = ttk.Notebook(self, name="tabnav", width=400, height=400)
 
-        self.default_theme()
+        self.frame_one = ttk.Frame(self.tabs)
+        self.frame_two = ttk.Frame(self.tabs)
+        self.frame_three = ttk.Frame(self.tabs)
+        self.label_one = ttk.Label(self.frame_one, text="This is Variables")
+        self.label_two = ttk.Label(self.frame_two, text="This is SFA")
+        self.label_three = ttk.Label(self.frame_three, text="This is Frame MFA")
 
-    def default_theme(self):
-        big_frame = ttk.Frame(self)
-        big_frame.pack(fill="both", expand=True)
+        self.label_one.pack(padx=5, pady=5)
+        self.label_two.pack(padx=5, pady=5)
+        self.label_three.pack(padx=5, pady=5)
 
-    def title_bar(self):
-        frame = tk.Frame(self, bg="black", relief='raised', bd=2)
-        close_button = tk.Button(self.frame, text="X", command=self.destroy)
+        self.frame_one.pack(padx=5, pady=5)
+        self.frame_two.pack(padx=5, pady=5)
+        self.frame_three.pack(padx=5, pady=5)
 
-        frame.pack(expand=1, fill=tk.X)
-        close_button.pack(expand=1,fill=tk.BOTH)
+        self.tabs.add(self.frame_one,text="Variables")
+        self.tabs.add(self.frame_two,text="SFA")
+        self.tabs.add(self.frame_three,text="MFA")
+        
+        self.tabs.pack(padx=5,pady=5)
 
-    def main_frame(self):
-        self.open_button = tk.Button(self, text="Open", command=App)
-        self.open_button.grid()
-
-class MainFrame(tk.Frame):
-    def __init__(self, master=None):
-        tk.Frame.__init__(self, master)
-        self.grid()
-        self.create_widgets()
-
-    def create_widgets(self):
-        self.quit_button = tk.Button(self, text="Quit", command=self.quit)
-        self.quit_button.grid()
+        # The treeview
+        # col = ("Variables", "p_value", "MAPE", "MSE")
+        # self.treeview = ttk.Treeview(self.tabs[0], columns=col, height=10, name="variables")
+        # self.treeview.pack(padx=5,pady=5)
 
 if __name__ == "__main__":
     app = App()
