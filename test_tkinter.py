@@ -1,8 +1,6 @@
 import tkinter as tk
-from tkinter import BOTH, PhotoImage, ttk
+from tkinter import BOTH, PhotoImage, ttk, filedialog
 from abc import ABC
-
-import sv_ttk
 
 
 class FloatingWindow(tk.Toplevel):
@@ -45,9 +43,23 @@ class App(tk.Tk):
         self.iconbitmap("logo/logo-sea.ico")
         self.title("Seabank Modeling")
         self.geometry("500x500")
+        self.x = self.winfo_x()
+        self.y = self.winfo_y()
+
+        print(self.y)
+
+        # Input file json
+        # self.file_config = filedialog.askopenfile()
+        self.file_frame = ttk.Frame(self)
+        self.filename_dialog = ttk.Entry(self.file_frame, text="filename", state="disabled")
+        self.dial_button = ttk.Button(self.file_frame, text="Open")
+
+        self.file_frame.pack(padx=5,pady=5)
+        self.filename_dialog.grid(row=0, column=0)
+        self.dial_button.grid(row=0, column=1)
         
         # Tab Navigation
-        self.tabs = ttk.Notebook(self, name="tabnav", width=400, height=400)
+        self.tabs = ttk.Notebook(self, name="tabnav", width=self.winfo_x(), height=self.winfo_y())
 
         self.frame_one = ttk.Frame(self.tabs)
         self.frame_two = ttk.Frame(self.tabs)
