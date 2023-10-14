@@ -1,3 +1,4 @@
+import csv
 import os
 import tkinter as tk
 from tkinter import BOTH, PhotoImage, ttk, filedialog
@@ -5,9 +6,8 @@ from abc import ABC
 from functools import partial
 from tkinter import messagebox
 import psycopg2
-from traitlets import default
 
-def connection_string():
+def build_connection():
     conn = psycopg2.connect(database="seabank", user='postgres', password='erfan123', host='127.0.0.1', port= '5432')
     cursor = conn.cursor()
     
@@ -105,10 +105,12 @@ class FL_Menu(ttk.Frame):
         self.frame_one = ttk.Frame(self.tabs)
         self.frame_two = ttk.Frame(self.tabs)
         self.frame_three = ttk.Frame(self.tabs)
+        self.frame_fourth = ttk.Frame(self.tabs)
 
         # Content of each Frames
         self.label_two = ttk.Label(self.frame_two, text="This is SFA")
         self.label_three = ttk.Label(self.frame_three, text="This is Frame MFA")
+        self.label_fourth = ttk.Label(self.frame_fourth, text="This is Frame Forecast")
 
         # Add notepad in frame zero
         self.input_frame = ttk.Frame(self.frame_zero)
@@ -135,18 +137,17 @@ class FL_Menu(ttk.Frame):
         self.entry_one.pack(padx=5,side='left',fill='x', expand=True)
         self.__add_button.pack(padx=5,side='left', fill='x', expand=False)
         self.input_frame_one.pack(side='top',fill='x',expand=False)
+
         # Add treeview in frame one
-        columns = ("date", "var0")
-        self.variable_tables = ttk.Treeview(self.frame_one, columns=columns,show="headings")
+        columns = ("date", )
+        self.variable_tables = ttk.Treeview(self.frame_one, columns=("date", "", "", "", ""),show="headings")
+        self.variable_tables.column("date",anchor='w')
         self.variable_tables.heading("date", text="Date")
-        self.variable_tables.heading("var0", text="Variable0")
 
         variables = []
         for var in variables:
             self.variable_tables.insert('',tk.END,values=var)
 
-        # self.variable_tables.grid(row=0, column=0, sticky="nsew")
-        
         table_scroll = ttk.Scrollbar(self.variable_tables, orient=tk.HORIZONTAL, command=self.variable_tables.yview)
         self.variable_tables.configure(yscroll=table_scroll.set)
         table_scroll.pack(side='bottom',fill='both',expand=False)
@@ -155,18 +156,21 @@ class FL_Menu(ttk.Frame):
         self.variable_tables.pack(padx=5,pady=5,fill='both',expand=True)
         self.label_two.pack(padx=5, pady=5)
         self.label_three.pack(padx=5, pady=5)
+        self.label_fourth.pack(padx=5, pady=5)
 
         # Pack of frame
         self.frame_one.pack(padx=5, pady=5)
         self.frame_zero.pack(padx=5, pady=5)
         self.frame_two.pack(padx=5, pady=5)
         self.frame_three.pack(padx=5, pady=5)
+        self.frame_fourth.pack(padx=5, pady=5)
 
         # Add the frame to the tabs
         self.tabs.add(self.frame_one,text="Variables")
         self.tabs.add(self.frame_zero,text="Configuration")
         self.tabs.add(self.frame_two,text="SFA")
         self.tabs.add(self.frame_three,text="MFA")
+        self.tabs.add(self.frame_fourth,text="Forecast")
         
         # Pack tabs navigation to parents
         self.tabs.pack(padx=5,pady=5,fill='both',expand=True)
@@ -225,9 +229,24 @@ class FL_Menu(ttk.Frame):
             self.entry.configure(text=os.path.abspath(self._file))
             self.textpad.delete(1.0, tk.END)  
   
-            file = open(self._file, "r")  
-  
-            self.textpad.insert(1.0, file.read())  
+            file = open(self._file, "r", encoding="utf-8")  
+            
+            if type(file) == "_io.TextIOWrapper":
+                raise Exception("Work in csv file only")
+            else:
+                reader = csv.reader(file)
+                header = []
+                header = next(reader)
+                rows = []
+
+                if isinstance(header[0].lower(),str):
+                    print(True)
+                else:
+                    print(False)
+
+                print(header[0].lower())
+
+            # self.textpad.insert(1.0, file.read())  
   
             file.close()  
 
@@ -295,7 +314,7 @@ class App(tk.Tk):
 
         # Status bar
         self.bottom_bar = ttk.Frame()
-        self.bar_label = ttk.Label(self.bottom_bar,text=str(connection_string()))
+        self.bar_label = ttk.Label(self.bottom_bar,text=str(build_connection()))
         self.bar_label.pack(side="left", padx=5,pady=5)
         self.bottom_bar.pack(side="bottom", fill="x")
 
@@ -354,7 +373,7 @@ class App(tk.Tk):
 
 
 if __name__ == "__main__":
-    connection_string()
+    build_connection()
     app = App()
     app.iconbitmap("logo/logo-sea.ico")
     app.title("Seabank - Finance Project")
