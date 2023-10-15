@@ -437,7 +437,7 @@ class FL_Menu(ttk.Frame):
 
         self.table.pack(fill=tk.BOTH,expand=True)
 
-        
+
         xscroll = tk.Scrollbar(self.table, orient=tk.HORIZONTAL,command=self.table.xview)
         xscroll.pack(padx=5,pady=5,side='bottom',fill='both')
         self.table.configure(xscrollcommand=xscroll.set)
