@@ -329,9 +329,9 @@ class FL_Menu(ttk.Frame):
         # Add the frame to the tabs
         self.tabs.add(self.frame_one,text="Variables")
         self.tabs.add(self.frame_zero,text="Configuration")
+        self.tabs.add(self.frame_fourth,text="Forecast")
         self.tabs.add(self.frame_two,text="SFA")
         self.tabs.add(self.frame_three,text="MFA")
-        self.tabs.add(self.frame_fourth,text="Forecast")
         
         # Pack tabs navigation to parents
         self.tabs.pack(padx=5,pady=5,fill='both',expand=True)
