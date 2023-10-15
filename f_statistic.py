@@ -1638,30 +1638,30 @@ class App:
             logging.info(config.read_keys())
             self.mainloop()
 
-def main():
-    """ Lies the start time script running"""
-    start_time = datetime.datetime.now()
-    logging.info("Script running on {}".format(start_time))
+# def main():
+#     """ Lies the start time script running"""
+#     start_time = datetime.datetime.now()
+#     logging.info("Script running on {}".format(start_time))
 
-    """ Lies the argparse to get param in cmd line """
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--file", type=str, default=None)
-    arg = parser.parse_args()
+#     """ Lies the argparse to get param in cmd line """
+#     parser = argparse.ArgumentParser()
+#     parser.add_argument("--file", type=str, default=None)
+#     arg = parser.parse_args()
 
-    """ Lies the main runner program """
-    app = App()
+#     """ Lies the main runner program """
+#     app = App()
     
-    if arg.file is None:
-        app.set_file = "./config.json"
-    else:
-        app.set_file = arg.file
+#     if arg.file is None:
+#         app.set_file = "./file/config.json"
+#     else:
+#         app.set_file = arg.file
 
-    app.run()
+#     app.run()
 
-    """ Lies the end time script running"""
-    end_time = datetime.datetime.now()
-    logging.info("Script finished on {}".format(end_time))
-    logging.info("Script running about {}".format(end_time - start_time))
+#     """ Lies the end time script running"""
+#     end_time = datetime.datetime.now()
+#     logging.info("Script finished on {}".format(end_time))
+#     logging.info("Script running about {}".format(end_time - start_time))
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

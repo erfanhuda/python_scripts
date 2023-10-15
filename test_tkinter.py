@@ -5,18 +5,169 @@ from tkinter import BOTH, PhotoImage, ttk, filedialog
 from abc import ABC
 from functools import partial
 from tkinter import messagebox
-import psycopg2
+import itertools
+import f_statistic as f
+# import psycopg2
 
-def build_connection():
-    conn = psycopg2.connect(database="seabank", user='postgres', password='erfan123', host='127.0.0.1', port= '5432')
-    cursor = conn.cursor()
+def build_connection(*args, **kwargs):
+    # conn = psycopg2.connect(database=kwargs['database'], user=kwargs['user'], password=kwargs['password'], host=kwargs['host'], port= kwargs['port'])
+    # cursor = conn.cursor()
     
-    cursor.execute("SELECT version();")
-    data = cursor.fetchone()
-    status = ("Connection established", data)
-    conn.close()
+    # cursor.execute("SELECT version();")
+    # data = cursor.fetchone()
+    status = ("Connection established", "Yea")
+    # conn.close()
     
     return status
+
+class ConfigurationTable(ttk.Treeview):
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
+        self.bind("<Double-1>", self.on_double_click)
+
+    def on_double_click(self, e):
+        region_clicked = self.identify_region(e.x,e.y)
+        
+        if region_clicked not in ("tree", "cell"):
+            return
+        
+        # Item yg diklik dua kali
+        # Contoh, "#0" adalah kolom pertama, berikutnya "#1", dst.
+        column = self.identify_column(e.x)
+        column_index = int(column[1:]) - 1
+
+        # Row Item yg diklik dua kali
+        selected_iid = self.focus()
+        selected_values = self.item(selected_iid)
+
+        if column == "#0":
+            selected_values = selected_values.get("text")
+        else:
+            selected_values = selected_values.get("values")[column_index]
+
+        column_box = self.bbox(selected_iid, column)
+        edit_box = ttk.Entry(self, width=column_box[2])
+
+        # Koordinat dari edit box based on col index & iid selain col 0
+        if column == "#0":
+            return
+        else:
+            edit_box.column = column_index
+            edit_box.row = selected_iid
+
+            edit_box.insert(0, selected_values)
+            edit_box.select_range(0, tk.END)
+            edit_box.focus()
+            edit_box.bind("<FocusOut>", self.on_focus_out)
+            edit_box.bind("<Return>", self.on_return)
+
+            edit_box.place(x=column_box[0], y=column_box[1], width=column_box[2], height=column_box[3])
+    
+    def on_focus_out(self, e):
+        e.widget.destroy()
+
+    def on_return(self, e):
+        new_text = e.widget.get()
+        selected_iid = e.widget.row
+        col_index = e.widget.column
+
+        if col_index == -1:
+            return
+        else:
+            current_values = self.item(selected_iid).get("values")
+            current_values[col_index] = new_text
+            self.item(selected_iid, values=current_values)
+
+        e.widget.destroy()
+
+
+class VariablesTable(ttk.Treeview):
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
+
+    def lower_first(self, iterator):
+        return itertools.chain([next(iterator).lower()], iterator)
+
+    def on_append_files(self, files):
+
+        csvreader = csv.DictReader(self.lower_first(files))
+        items = []
+
+        for row in csvreader:
+            if "date" in row.keys():
+                items.append(row)
+            else:
+                print("Check the date fields.")
+                print(row)
+
+        headers = [header for header in items[0].keys()]
+
+        if "date" in headers:
+            self.heading("#0", text="date")
+            
+            headers.remove('date')
+            self.configure(columns=headers)
+            for item in headers:
+                self.heading(item, text=item)
+
+        for item in items:
+            item_values = list(item.values())
+
+            date = item_values[0]
+            values = item_values[1:]
+
+            self.insert("", index=tk.END, text=date, values=values)
+
+class ContactsTable(ttk.Treeview):
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
+        self.bind("<Double-1>", self.on_double_click)
+
+    def on_double_click(self, e):
+        region_clicked = self.identify_region(e.x,e.y)
+        
+        if region_clicked not in ("tree", "cell"):
+            return
+        
+        # Item yg diklik dua kali
+        # Contoh, "#0" adalah kolom pertama, berikutnya "#1", dst.
+        column = self.identify_column(e.x)
+        column_index = int(column[1:]) - 1
+
+        # Row Item yg diklik dua kali
+        selected_iid = self.focus()
+        selected_values = self.item(selected_iid)
+
+        if column == "#0":
+            selected_values = selected_values.get("text")
+        else:
+            selected_values = selected_values.get("values")[column_index]
+
+class ContactsFrame(ttk.Frame):
+    def __init__(self, parent, **kwargs):
+        super().__init__(parent, **kwargs)
+        self.name = "Contacts"
+        self.place(x=0,y=0,relwidth=0.3,relheight=1)
+        self.create_widgets()
+
+    def create_widgets(self):
+        col_names = ("name", "phone", "email", "address")
+        self.table = ttk.Treeview(self,columns=col_names,selectmode='extended')
+        self.table.heading("#0",text="Type")
+        self.table.heading("name",text="Name")
+        self.table.heading("phone",text="Phone")
+        self.table.heading("email",text="Email")
+        self.table.heading("address",text="Address")
+        company_row = self.table.insert("", text="Company", index=tk.END)
+        self.table.insert(company_row, values=("Box Kayu", "085799663331", "box_kayu@gmail.com", "Jakarta, Indonesia"), index=tk.END)
+        persons_row = self.table.insert("", text="Person", index=tk.END)
+        self.table.pack(fill=tk.BOTH,expand=True)
+
+        xscroll = tk.Scrollbar(self.table, orient=tk.HORIZONTAL,command=self.table.xview)
+        xscroll.pack(padx=5,pady=5,side='bottom',fill='both')
+        self.table.configure(xscrollcommand=xscroll.set)
+        self.table.bind("<MouseWheel>", lambda e : self.table.yview_scroll(int(-1*(e.delta)), "units"))
+        self.table.bind("<Control-MouseWheel>", lambda e : self.table.xview_scroll(int(-1*(e.delta)), "units"))
 
 class ECL_Menu(ttk.Frame):
     def __init__(self,parent):
@@ -110,10 +261,18 @@ class FL_Menu(ttk.Frame):
         # Content of each Frames
         self.label_two = ttk.Label(self.frame_two, text="This is SFA")
         self.label_three = ttk.Label(self.frame_three, text="This is Frame MFA")
-        self.label_fourth = ttk.Label(self.frame_fourth, text="This is Frame Forecast")
 
         # Add notepad in frame zero
-        self.input_frame = ttk.Frame(self.frame_zero)
+        self._note_config = ttk.Notebook(self.frame_zero)
+
+        self._note_first = ttk.Frame(self._note_config)
+        self._note_second = ttk.Frame(self._note_config)
+        self._table_config_manual()
+        self._note_first.pack(padx=5,pady=5,expand=True,fill='both')
+        self._note_second.pack(padx=5,pady=5,expand=True,fill='both')
+        self._note_config.pack(padx=5,pady=5,fill='both',expand=True)
+        
+        self.input_frame = ttk.Frame(self._note_first)
         self.entry = tk.Label(self.input_frame)
         self.__open_json_file = ttk.Button(self.input_frame, text="Open JSON File", command=self.__open_json_file)
 
@@ -121,13 +280,16 @@ class FL_Menu(ttk.Frame):
         self.__open_json_file.pack(padx=5,side='left', fill='x', expand=False)
         self.input_frame.pack(side='top',fill='x',expand=False)
 
-        self.textpad = tk.Text(self.frame_zero)
+        self.textpad = tk.Text(self._note_first)
         self.textpad.pack(padx=5,pady=5, fill='both', expand=True)
 
-        self.__save_json_file = ttk.Button(self.frame_zero, text="Save", command=self.__save_json_file)
-        self._run_file = ttk.Button(self.frame_zero, text="Run")
+        self.__save_json_file = ttk.Button(self._note_first, text="Save", command=self.__save_json_file)
+        self._run_file = ttk.Button(self._note_first, text="Run", command=self._run_script)
         self.__save_json_file.pack(padx=5,pady=5,side='left', fill='x', expand=False)
         self._run_file.pack(padx=5,pady=5,side='right', fill='x', expand=False)
+
+        self._note_config.add(self._note_second, text="Manual")
+        self._note_config.add(self._note_first, text="JSON File")
 
         # Add button in frame one
         self.input_frame_one = ttk.Frame(self.frame_one)
@@ -139,24 +301,23 @@ class FL_Menu(ttk.Frame):
         self.input_frame_one.pack(side='top',fill='x',expand=False)
 
         # Add treeview in frame one
-        columns = ("date", )
-        self.variable_tables = ttk.Treeview(self.frame_one, columns=("date", "", "", "", ""),show="headings")
-        self.variable_tables.column("date",anchor='w')
-        self.variable_tables.heading("date", text="Date")
+        col_names = ("",)
+        self.var_tables = VariablesTable(self.frame_one,columns=col_names,selectmode='extended')
+        self.var_tables.heading("#0",text="Date")
+        self.var_tables.heading("",text="")
+        self.var_tables.pack(fill=tk.BOTH,expand=True)
 
-        variables = []
-        for var in variables:
-            self.variable_tables.insert('',tk.END,values=var)
+        yscroll = tk.Scrollbar(self.var_tables, orient=tk.VERTICAL,command=self.var_tables.yview)
+        xscroll = tk.Scrollbar(self.var_tables, orient=tk.HORIZONTAL,command=self.var_tables.xview)
+        xscroll.pack(padx=5,pady=5,side='bottom',fill='both')
+        yscroll.pack(padx=5,pady=5,side='right',fill='both')
+        self.var_tables.configure(xscrollcommand=xscroll.set,yscrollcommand=yscroll.set)
+        self.var_tables.bind("<Control-MouseWheel>", lambda e : self.var_tables.xview_scroll(int(-1*(e.delta)), "units"))
 
-        table_scroll = ttk.Scrollbar(self.variable_tables, orient=tk.HORIZONTAL, command=self.variable_tables.yview)
-        self.variable_tables.configure(yscroll=table_scroll.set)
-        table_scroll.pack(side='bottom',fill='both',expand=False)
         
         # Pack of frame content
-        self.variable_tables.pack(padx=5,pady=5,fill='both',expand=True)
         self.label_two.pack(padx=5, pady=5)
         self.label_three.pack(padx=5, pady=5)
-        self.label_fourth.pack(padx=5, pady=5)
 
         # Pack of frame
         self.frame_one.pack(padx=5, pady=5)
@@ -174,6 +335,11 @@ class FL_Menu(ttk.Frame):
         
         # Pack tabs navigation to parents
         self.tabs.pack(padx=5,pady=5,fill='both',expand=True)
+
+    def _run_script(self):
+        app = f.App()
+        app.set_file = self._file
+        app.run()
 
     def __open_json_file(self):
         self._file = filedialog.askopenfilename(defaultextension=".json", filetypes=[("All Files", "*.*"), ("JSON Files", ".json")])
@@ -200,13 +366,10 @@ class FL_Menu(ttk.Frame):
             if self._file == "":  
                 self._file = os.path.basename(self._file)
             else:  
-                  
                 # For trying to  save the file  
                 file = open(self._file,"w")  
                 file.write(self.textpad.get(1.0, tk.END))  
-
                 messagebox.showinfo("Information","File successfully saved")
-
                 
                 file.close()  
                   
@@ -229,26 +392,56 @@ class FL_Menu(ttk.Frame):
             self.entry.configure(text=os.path.abspath(self._file))
             self.textpad.delete(1.0, tk.END)  
   
-            file = open(self._file, "r", encoding="utf-8")  
+            file = open(self._file, "r", newline="",encoding="utf-8-sig",errors='replace',)  
             
-            if type(file) == "_io.TextIOWrapper":
-                raise Exception("Work in csv file only")
-            else:
-                reader = csv.reader(file)
-                header = []
-                header = next(reader)
-                rows = []
-
-                if isinstance(header[0].lower(),str):
-                    print(True)
-                else:
-                    print(False)
-
-                print(header[0].lower())
-
-            # self.textpad.insert(1.0, file.read())  
+            # self.textpad.insert(1.0, file.read())
+            self.var_tables.on_append_files(file)
   
-            file.close()  
+            file.close()
+    
+    def _table_config_manual(self):
+        # Add buttons in frame fifth
+        self.btn_frame = ttk.Frame(self._note_second)
+        self._export_json = ttk.Button(self.btn_frame, text="Export to JSON")
+        self._save = ttk.Button(self.btn_frame, text="Save")
+        self._export_json.pack(padx=5,pady=5,side="right")
+        self._save.pack(padx=5,pady=5,side="right")
+        self.btn_frame.pack(padx=5,pady=5,fill="both")
+
+        # Add treeview in frame fifth
+        col_names = ("values",)
+        self.table = ConfigurationTable(self._note_second,columns=col_names,selectmode='extended')
+        self.table.heading("#0",text="Configurations")
+        self.table.heading("values",text="Values")
+
+        variable_config = self.table.insert(parent="", index=tk.END,text="Set Variables")
+        y_var_config = self.table.insert(parent=variable_config, index=tk.END,text="Y Variable", values=("ODR",))
+        self.table.insert(parent=y_var_config, index=tk.END, text="z-score", values=("",))
+        self.table.insert(parent=y_var_config, index=tk.END, text="Ln", values=("",))
+        x_var_config = self.table.insert(parent=variable_config, index=tk.END,text="X Variable", values=("GDP",))
+        self.table.insert(parent=x_var_config, index=tk.END, text="Moving Average (Month)", values=("",))
+        self.table.insert(parent=x_var_config, index=tk.END, text="Exponential (Month)", values=("",))
+        self.table.insert(parent=x_var_config, index=tk.END, text="Lag (Month)", values=("",))
+        self.table.insert(parent=x_var_config, index=tk.END, text="Lead (Month)", values=("",))
+        self.table.insert(parent=x_var_config, index=tk.END, text="Delta (Month)", values=("",))
+        self.table.insert(parent=x_var_config, index=tk.END, text="Variance (Month)", values=("",))
+        self.table.insert(parent=x_var_config, index=tk.END, text="Growth (Month)", values=("",))
+
+        test_sample_config = self.table.insert(parent="", index=tk.END,text="Set Samples")
+        self.table.insert(parent=test_sample_config, index=tk.END,text="Training Date", values=("",))
+        self.table.insert(parent=test_sample_config, index=tk.END,text="Testing Date", values=("",))
+        
+        forecast_config = self.table.insert(parent="", index=tk.END,text="Forecast")
+        self.table.insert(parent=forecast_config, index=tk.END,text="Training Date", values=("",))
+        self.table.insert(parent=forecast_config, index=tk.END,text="Testing Date", values=("",))
+
+        self.table.pack(fill=tk.BOTH,expand=True)
+
+        
+        xscroll = tk.Scrollbar(self.table, orient=tk.HORIZONTAL,command=self.table.xview)
+        xscroll.pack(padx=5,pady=5,side='bottom',fill='both')
+        self.table.configure(xscrollcommand=xscroll.set)
+        self.table.bind("<Control-MouseWheel>", lambda e : self.table.xview_scroll(int(-1*(e.delta)), "units"))
 
 class SettingMenu(tk.Toplevel):
     def __init__(self,parent):
@@ -306,6 +499,7 @@ class App(tk.Tk):
         # Notebook version
         self.tabs = ttk.Notebook(self, name="tabnav", width=self.winfo_x(), height=self.winfo_y())
         self.tabs.bind("<<NotebookTabChanged>>", self.handle_add_tab)
+        self.tabs.bind("<Double-1>",self.remove_tab)
         self.tabs.pack(padx=10,pady=10,fill='both',expand=True)
 
         self.empty_frame = ttk.Frame()
@@ -337,7 +531,7 @@ class App(tk.Tk):
 
         self.menu.add_cascade(label="ECL Model", menu=modeling_menu)
         self.menu.add_cascade(label="ECL Data", menu=ecl_menu)
-        self.menu.add_cascade(label="Setting", menu=setting_menu)
+        self.menu.add_cascade(label="Settings", menu=setting_menu)
 
     def handle_add_tab(self, event):
         if self.tabs.select() == self.tabs.tabs()[-1]:
@@ -370,6 +564,10 @@ class App(tk.Tk):
 
         obj(self)
         obj.resiable(False,False)
+
+    def remove_tab(self, e):
+        index = self.tabs.index(self.tabs.select())
+        self.tabs.forget(index)
 
 
 if __name__ == "__main__":
