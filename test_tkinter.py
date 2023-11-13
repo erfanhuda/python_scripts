@@ -495,6 +495,8 @@ class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.geometry("600x400")
+        self.style = ttk.Style()
+        self.style.theme_use('clam')
 
         # Notebook version
         self.tabs = ttk.Notebook(self, name="tabnav", width=self.winfo_x(), height=self.winfo_y())
