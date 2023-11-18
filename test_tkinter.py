@@ -1,11 +1,17 @@
 import csv
+from io import StringIO
+from multiprocessing import Process
 import os
+import pickle
+import threading
 import tkinter as tk
 from tkinter import BOTH, PhotoImage, ttk, filedialog
 from abc import ABC
 from functools import partial
 from tkinter import messagebox
 import itertools
+
+import pandas as pd
 import f_statistic as f
 # import psycopg2
 
@@ -89,34 +95,36 @@ class VariablesTable(ttk.Treeview):
         return itertools.chain([next(iterator).lower()], iterator)
 
     def on_append_files(self, files):
-
         csvreader = csv.DictReader(self.lower_first(files))
+        # csvreader = pd.read_csv(files, delimiter=",")
+        # csvreader['Date'] = pd.to_datetime(csvreader['Date'])
         items = []
+        print(*csvreader)
 
-        for row in csvreader:
-            if "date" in row.keys():
-                items.append(row)
-            else:
-                print("Check the date fields.")
-                print(row)
+        # for row in csvreader:
+        #     if "Date" in row.keys():
+        #         items.append(row)
+        #     else:
+        #         print("Check the date fields.")
+        #         print(row)
 
-        headers = [header for header in items[0].keys()]
+        # headers = [header for header in items[0].keys()]
 
-        if "date" in headers:
-            self.heading("#0", text="date")
+        # if "date" in headers:
+        #     self.heading("#0", text="date")
             
-            headers.remove('date')
-            self.configure(columns=headers)
-            for item in headers:
-                self.heading(item, text=item)
+        #     headers.remove('date')
+        #     self.configure(columns=headers)
+        #     for item in headers:
+        #         self.heading(item, text=item)
 
-        for item in items:
-            item_values = list(item.values())
+        # for item in items:
+        #     item_values = list(item.values())
 
-            date = item_values[0]
-            values = item_values[1:]
+        #     date = item_values[0]
+        #     values = item_values[1:]
 
-            self.insert("", index=tk.END, text=date, values=values)
+        #     self.insert("", index=tk.END, text=date, values=values)
 
 class ContactsTable(ttk.Treeview):
     def __init__(self, parent, **kwargs):
@@ -392,9 +400,7 @@ class FL_Menu(ttk.Frame):
             self.entry.configure(text=os.path.abspath(self._file))
             self.textpad.delete(1.0, tk.END)  
   
-            file = open(self._file, "r", newline="",encoding="utf-8-sig",errors='replace',)  
-            
-            # self.textpad.insert(1.0, file.read())
+            file = open(self._file, "r", newline="",encoding="utf-8-sig",errors='replace',)
             self.var_tables.on_append_files(file)
   
             file.close()
@@ -402,8 +408,8 @@ class FL_Menu(ttk.Frame):
     def _table_config_manual(self):
         # Add buttons in frame fifth
         self.btn_frame = ttk.Frame(self._note_second)
-        self._export_json = ttk.Button(self.btn_frame, text="Export to JSON")
-        self._save = ttk.Button(self.btn_frame, text="Save")
+        self._export_json = ttk.Button(self.btn_frame, text="Export to JSON",command=self._export_to_json)
+        self._save = ttk.Button(self.btn_frame, text="Save",command=self._on_save_to_json)
         self._export_json.pack(padx=5,pady=5,side="right")
         self._save.pack(padx=5,pady=5,side="right")
         self.btn_frame.pack(padx=5,pady=5,fill="both")
@@ -414,26 +420,26 @@ class FL_Menu(ttk.Frame):
         self.table.heading("#0",text="Configurations")
         self.table.heading("values",text="Values")
 
-        variable_config = self.table.insert(parent="", index=tk.END,text="Set Variables")
-        y_var_config = self.table.insert(parent=variable_config, index=tk.END,text="Y Variable", values=("ODR",))
-        self.table.insert(parent=y_var_config, index=tk.END, text="z-score", values=("",))
-        self.table.insert(parent=y_var_config, index=tk.END, text="Ln", values=("",))
-        x_var_config = self.table.insert(parent=variable_config, index=tk.END,text="X Variable", values=("GDP",))
-        self.table.insert(parent=x_var_config, index=tk.END, text="Moving Average (Month)", values=("",))
-        self.table.insert(parent=x_var_config, index=tk.END, text="Exponential (Month)", values=("",))
-        self.table.insert(parent=x_var_config, index=tk.END, text="Lag (Month)", values=("",))
-        self.table.insert(parent=x_var_config, index=tk.END, text="Lead (Month)", values=("",))
-        self.table.insert(parent=x_var_config, index=tk.END, text="Delta (Month)", values=("",))
-        self.table.insert(parent=x_var_config, index=tk.END, text="Variance (Month)", values=("",))
-        self.table.insert(parent=x_var_config, index=tk.END, text="Growth (Month)", values=("",))
+        variable_config = self.table.insert(parent="", iid='1', index=tk.END,text="Set Variables")
+        y_var_config = self.table.insert(parent=variable_config, iid='11',index=tk.END,text="Y Variable", values=("ODR",))
+        self.table.insert(parent=y_var_config, index=tk.END, iid='111', text="z-score", values=("",))
+        self.table.insert(parent=y_var_config, index=tk.END, iid='112',text="Ln", values=("",))
+        x_var_config = self.table.insert(parent=variable_config, iid='2', index=tk.END,text="X Variable", values=("GDP",))
+        self.table.insert(parent=x_var_config, index=tk.END, iid='21',text="Moving Average (Month)", values=("",))
+        self.table.insert(parent=x_var_config, index=tk.END, iid='22',text="Exponential (Month)", values=("",))
+        self.table.insert(parent=x_var_config, index=tk.END, iid='23',text="Lag (Month)", values=("",))
+        self.table.insert(parent=x_var_config, index=tk.END, iid='24',text="Lead (Month)", values=("",))
+        self.table.insert(parent=x_var_config, index=tk.END, iid='25',text="Delta (Month)", values=("",))
+        self.table.insert(parent=x_var_config, index=tk.END, iid='26',text="Variance (Month)", values=("",))
+        self.table.insert(parent=x_var_config, index=tk.END, iid='27',text="Growth (Month)", values=("",))
 
-        test_sample_config = self.table.insert(parent="", index=tk.END,text="Set Samples")
-        self.table.insert(parent=test_sample_config, index=tk.END,text="Training Date", values=("",))
-        self.table.insert(parent=test_sample_config, index=tk.END,text="Testing Date", values=("",))
+        test_sample_config = self.table.insert(parent="", iid='3',index=tk.END,text="Set Samples")
+        self.table.insert(parent=test_sample_config,iid='31', index=tk.END,text="Training Date", values=("",))
+        self.table.insert(parent=test_sample_config,iid='32', index=tk.END,text="Testing Date", values=("",))
         
-        forecast_config = self.table.insert(parent="", index=tk.END,text="Forecast")
-        self.table.insert(parent=forecast_config, index=tk.END,text="Training Date", values=("",))
-        self.table.insert(parent=forecast_config, index=tk.END,text="Testing Date", values=("",))
+        forecast_config = self.table.insert(parent="",iid='4', index=tk.END,text="Forecast")
+        self.table.insert(parent=forecast_config,iid='41', index=tk.END,text="Training Date", values=("",))
+        self.table.insert(parent=forecast_config,iid='42', index=tk.END,text="Testing Date", values=("",))
 
         self.table.pack(fill=tk.BOTH,expand=True)
 
@@ -442,6 +448,12 @@ class FL_Menu(ttk.Frame):
         xscroll.pack(padx=5,pady=5,side='bottom',fill='both')
         self.table.configure(xscrollcommand=xscroll.set)
         self.table.bind("<Control-MouseWheel>", lambda e : self.table.xview_scroll(int(-1*(e.delta)), "units"))
+
+    def _on_save_to_json(self, level=1):
+        pass
+
+    def _export_to_json(self):
+        pass
 
 class SettingMenu(tk.Toplevel):
     def __init__(self,parent):
