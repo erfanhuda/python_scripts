@@ -3,12 +3,16 @@ import pandas as pd
 import glob
 import os
 
-variable_path = glob.glob(os.path.join(r"X:/dev/app/python_scripts/file/input/mev/", "*.csv"))
+SOURCE_PATH = "X:/dev/app/python_scripts/file/input/mev/"
+OUTPUT_PATH = "X:/dev/app/python_scripts/file/output/mev/"
+OUTPUT_FILE = "combine_variable2.xlsx"
+
+variable_path = glob.glob(os.path.join(SOURCE_PATH, "*.csv"))
 list_df = []
 
-# First CSV 
+# First CSV
 for item in variable_path:
-    df = pd.read_csv(item, parse_dates=['Date'],index_col=["Date"])
+    df = pd.read_csv(item, parse_dates=['Date'], index_col=["Date"])
     list_df.append(df)
 
 if len(list_df) > 1:
@@ -16,7 +20,8 @@ if len(list_df) > 1:
 else:
     frame = list_df[0]
 
-dt = pd.date_range(frame.index[0], frame.index[-1], freq="M").to_frame(name="Date")
+dt = pd.date_range(frame.index[0], frame.index[-1],
+                   freq="M").to_frame(name="Date")
 frame = pd.merge(dt, frame, left_index=True, right_index=True)
 frame = frame.drop(columns="Date").interpolate(method="linear")
 
@@ -44,8 +49,8 @@ period = {
 }
 
 configuration = {
-    "lag" : {
-        "1M":"mom",
+    "lag": {
+        "1M": "mom",
         "3M": "qoq",
         "6M": "hoh",
         "12M": "yoy",
@@ -64,22 +69,28 @@ configuration = {
     }
 }
 
-list_config = ["_".join([item, litem]) for item in configuration for litem in configuration[item] if configuration[item][litem]]
+list_config = ["_".join([item, litem])
+               for item in configuration for litem in configuration[item] if configuration[item][litem]]
 
 adv_config = itertools.combinations(list_config, r=2)
-adv_config = ["_".join([item[1], item[0].split("_")[1]]) for item in adv_config if "lag" in item[0] if "lag" not in item[1]]
+adv_config = ["_".join([item[1], item[0].split("_")[1]])
+              for item in adv_config if "lag" in item[0] if "lag" not in item[1]]
 
 list_config = list_config + adv_config
-adv_headers = ["_".join([item[0], item[1]]) for item in itertools.product(frame.columns.to_list(), list_config) ]
+adv_headers = ["_".join([item[0], item[1]]) for item in itertools.product(
+    frame.columns.to_list(), list_config)]
 adv_headers = pd.DataFrame(dt, columns=adv_headers)
 
 frame = pd.concat([frame, adv_headers], axis=1)
 
+
 def add_growth(x, y):
-    return (x / y) -1
+    return (x / y) - 1
+
 
 def add_delta(x, y):
     return x - y
+
 
 frame_config = []
 for col in frame:
@@ -96,23 +107,27 @@ for col in frame:
 
         if c[2] != c[-1]:
             # print(f"{c[0]}_lag_{c[-1]}")
-            frame[col] = frame[f"{c[0]}_lag_{c[-1]}"] - frame[f"{c[0]}_lag_{c[-1]}"].shift(period.get(c[2]))
+            frame[col] = frame[f"{c[0]}_lag_{c[-1]}"] - \
+                frame[f"{c[0]}_lag_{c[-1]}"].shift(period.get(c[2]))
         else:
             # print(f"{c[0]}")
-            frame[col] = frame[f"{c[0]}"] - frame[f"{c[0]}"].shift(period.get(c[-1]))
+            frame[col] = frame[f"{c[0]}"] - \
+                frame[f"{c[0]}"].shift(period.get(c[-1]))
 
     elif "growth" in col:
         c = col.split("_")
         frame_config.append(tuple([col, c[2]]))
-        
+
         if c[2] != c[-1]:
             # print(f"{c[0]}_lag_{c[-1]}")
-            frame[col] = (frame[f"{c[0]}_lag_{c[-1]}"] / frame[f"{c[0]}_lag_{c[-1]}"].shift(period.get(c[2]))) - 1
+            frame[col] = (frame[f"{c[0]}_lag_{c[-1]}"] /
+                          frame[f"{c[0]}_lag_{c[-1]}"].shift(period.get(c[2]))) - 1
         else:
             # print(f"{c[0]}")
-            frame[col] = (frame[f"{c[0]}"] / frame[f"{c[0]}"].shift(period.get(c[-1]))) - 1
+            frame[col] = (
+                frame[f"{c[0]}"] / frame[f"{c[0]}"].shift(period.get(c[-1]))) - 1
 
     else:
         frame_config.append(tuple([col, 0]))
 
-frame.to_excel("X:/dev/app/python_scripts/file/output/mev/combine_variable2.xlsx")
+frame.to_excel(os.path.join(OUTPUT_PATH, OUTPUT_FILE))
