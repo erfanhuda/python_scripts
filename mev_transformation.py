@@ -3,9 +3,15 @@ import pandas as pd
 import glob
 import os
 
+<<<<<<< HEAD:mev_transformation.py
 SOURCE_PATH = "X:/dev/app/python_scripts/file/input/mev/"
 OUTPUT_PATH = "X:/dev/app/python_scripts/file/output/mev/"
 OUTPUT_FILE = "combine_variable2.xlsx"
+=======
+SOURCE_PATH = "C:/Users/muhammad.huda/OneDrive - Seagroup/01. WORK/01. ECL/Remodelling FY 23/Q3/raw data/Up to Sep 2023/MEV/Wrapped/csv/worst"
+OUTPUT_PATH = "C:/Users/muhammad.huda/OneDrive - Seagroup/01. WORK/01. ECL/Remodelling FY 23/Q3/raw data/Up to Sep 2023/MEV/Wrapped/csv/output"
+OUTPUT_FILE = "py_MEV_WORST_transformation_Q3.xlsx"
+>>>>>>> b9751c26959621c5541561d01e46b2f182c55f6c:variable_transformation.py
 
 variable_path = glob.glob(os.path.join(SOURCE_PATH, "*.csv"))
 list_df = []
@@ -26,6 +32,18 @@ frame = pd.merge(dt, frame, left_index=True, right_index=True)
 frame = frame.drop(columns="Date").interpolate(method="linear")
 
 period = {
+    "1Q": 3,
+    "2Q": 6,
+    "3Q": 9,
+    "4Q": 12,
+    "1H": 6,
+    "2H": 12,
+    "3H": 18,
+    "4H": 24,
+    "1Y": 12,
+    "2Y": 24,
+    "3Y": 36,
+    "4Y": 48,
     "1M": 1,
     "2M": 2,
     "3M": 3,
@@ -37,15 +55,7 @@ period = {
     "9M": 9,
     "10M": 10,
     "11M": 11,
-    "12M": 12,
-    "1Q": 3,
-    "2Q": 6,
-    "3Q": 9,
-    "4Q": 12,
-    "1Y": 12,
-    "2Y": 24,
-    "3Y": 36,
-    "4Y": 48
+    "12M": 12
 }
 
 configuration = {
@@ -53,19 +63,22 @@ configuration = {
         "1M": "mom",
         "3M": "qoq",
         "6M": "hoh",
+        "9M": "sos",
         "12M": "yoy",
     },
     "delta": {
-        "1Q": True,
-        "2Q": True,
-        "3Q": True,
-        "4Q": True,
+        "1M": True,
+        "3M": True,
+        "6M": True,
+        "9M": True,
+        "12M": True,
     },
     "growth": {
-        "1Q": True,
-        "2Q": True,
-        "3Q": True,
-        "4Q": True
+        "1M": True,
+        "3M": True,
+        "6M": True,
+        "9M": True,
+        "12M": True
     }
 }
 
@@ -106,9 +119,12 @@ for col in frame:
         frame_config.append(tuple([col, c[2]]))
 
         if c[2] != c[-1]:
-            # print(f"{c[0]}_lag_{c[-1]}")
-            frame[col] = frame[f"{c[0]}_lag_{c[-1]}"] - \
-                frame[f"{c[0]}_lag_{c[-1]}"].shift(period.get(c[2]))
+            frame[col] = frame[f"{c[0]}_lag_{c[2]}"] - \
+                frame[f"{c[0]}_lag_{c[2]}"].shift(period.get(c[-1]))
+
+            frame[col].rename(
+                "_".join([c[0], c[1], "lag", configuration['lag'][c[2]], c[3]]), inplace=True)
+
         else:
             # print(f"{c[0]}")
             frame[col] = frame[f"{c[0]}"] - \
@@ -122,12 +138,17 @@ for col in frame:
             # print(f"{c[0]}_lag_{c[-1]}")
             frame[col] = (frame[f"{c[0]}_lag_{c[-1]}"] /
                           frame[f"{c[0]}_lag_{c[-1]}"].shift(period.get(c[2]))) - 1
+
+            frame[col].rename(
+                "_".join([c[0], c[1], "lag", configuration['lag'][c[2]], c[3]]), inplace=True)
         else:
-            # print(f"{c[0]}")
             frame[col] = (
                 frame[f"{c[0]}"] / frame[f"{c[0]}"].shift(period.get(c[-1]))) - 1
-
     else:
         frame_config.append(tuple([col, 0]))
 
-frame.to_excel(os.path.join(OUTPUT_PATH, OUTPUT_FILE))
+frame.interpolate(method="linear").to_excel(
+    os.path.join(OUTPUT_PATH, OUTPUT_FILE))
+
+training_date = "2023-09-30"
+testing_date = "2023-10-31"

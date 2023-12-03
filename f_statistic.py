@@ -1,3 +1,4 @@
+from scipy.stats import kendalltau, pearsonr, spearmanr
 import itertools
 from dataclasses import dataclass, field
 import os
@@ -33,31 +34,44 @@ single_factor = Base("single_factor", dict)
 multiple_factor = Base("multiple_factor", dict)
 
 warnings.filterwarnings("ignore")
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - Seabank Finpro - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
+logging.basicConfig(level=logging.DEBUG,
+                    format='%(asctime)s - Seabank Finpro - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
 
 # BASE_CONFIG_FILE = "./file/fl_config.json"
 
 """ Handling missing data """
+
+
 def fill_last_value(data):
     return pd.concat(data, axis=1).sort_values('Date').ffill().fillna(0)
+
 
 def fill_interpolate(data):
     return pd.concat(data, axis=1).sort_values('Date').interpolate().fillna(0)
 
+
 def fill_fwd_value(data):
     return pd.concat(data, axis=1).sort_values('Date').bfill().fillna(0)
 
+
 """ Handling MEV Extended Variables """
+
+
 def add_growth(data, k):
     pass
+
 
 def add_delta(data, k):
     pass
 
+
 def add_variances(data, k):
     pass
 
+
 """ Handling plots """
+
+
 def generate_plots(data):
     fig, ax = plt.subplots(nrows=6)
     data['CPI'].plot(ax=ax[0], title=data['CPI'].name, color="green")
@@ -70,7 +84,10 @@ def generate_plots(data):
     fig.savefig("./file/input/mev/mev_combine.pdf")
     plt.show()
 
+
 """ Handling ODR transformation"""
+
+
 def transform_zscore(odrs):
     """ Z-Score for list of ODRS"""
     logging.info("Running z-score transformation")
@@ -81,6 +98,7 @@ def transform_zscore(odrs):
     # return [x.apply(stats.zscore) for x in odrs]
     logging.info("Finished extending z-score")
 
+
 def transform_logit(odrs):
     """ Logit for list of ODRS"""
     logging.info("Running logit transformation")
@@ -90,7 +108,8 @@ def transform_logit(odrs):
         odr['Logit_odr_client'] = odr['odr_client'].apply(sp.logit)
 
     logging.info("Finished extending logit")
-    
+
+
 def transform_log10(odrs):
     """Transform data to logarithmic base 10"""
     logging.info("Running logarithmic base 10 transformation")
@@ -100,7 +119,8 @@ def transform_log10(odrs):
         odr['ln_odr_client'] = np.log10(odr['odr_client'])
 
     logging.info("Finished extending logarithmic base 10")
-    
+
+
 def transform_log2(odrs):
     """Transform data to logarithmic base 2"""
     logging.info("Running logarithmic base 2 transformation")
@@ -109,6 +129,7 @@ def transform_log2(odrs):
         odr['ln_odr_loan'] = np.log2(odr['odr_loan'])
         odr['ln_odr_client'] = np.log2(odr['odr_client'])
     logging.info("Finished extending logarithmic base 2")
+
 
 def transform_ln(odrs):
     """Transform data to logarithmic natural"""
@@ -119,76 +140,94 @@ def transform_ln(odrs):
         odr['ln_odr_client'] = np.log(odr['odr_client'])
     logging.info("Finished extending logarithmic natural")
 
+
 def transform_sma(odrs, n=12):
     """ Simple Moving Average for list of ODRS"""
     logging.info("Running simple moving average transformation")
     for odr in odrs:
-        odr[f'SMA{n}_odr_balance'] = odr['odr_balance'].rolling(n).mean().fillna(0)
+        odr[f'SMA{n}_odr_balance'] = odr['odr_balance'].rolling(
+            n).mean().fillna(0)
         odr[f'SMA{n}_odr_loan'] = odr['odr_loan'].rolling(n).mean().fillna(0)
-        odr[f'SMA{n}_odr_client'] = odr['odr_client'].rolling(n).mean().fillna(0)
+        odr[f'SMA{n}_odr_client'] = odr['odr_client'].rolling(
+            n).mean().fillna(0)
     logging.info("Finished extending simple moving average")
-    
+
+
 def transform_cma(odrs, n=12):
     """ Cumulative Moving Average for list of ODRS"""
     logging.info("Running cumulative moving average transformation")
     for odr in odrs:
-        odr[f'CMA{n}_odr_balance'] = odr['odr_balance'].expanding(n).mean().fillna(0)
+        odr[f'CMA{n}_odr_balance'] = odr['odr_balance'].expanding(
+            n).mean().fillna(0)
         odr[f'CMA{n}_odr_loan'] = odr['odr_loan'].expanding(n).mean().fillna(0)
-        odr[f'CMA{n}_odr_client'] = odr['odr_client'].expanding(n).mean().fillna(0)
+        odr[f'CMA{n}_odr_client'] = odr['odr_client'].expanding(
+            n).mean().fillna(0)
     logging.info("Finished extending cumulative moving average")
 
-    
+
 def transform_ema(odrs, n=12):
     """ Exponential Moving Average for list of ODRS"""
     logging.info("Running exponential moving average transformation")
     for odr in odrs:
-        odr[f'EMA{n}_odr_balance'] = odr['odr_balance'].ewm(span=n).mean().fillna(0)
+        odr[f'EMA{n}_odr_balance'] = odr['odr_balance'].ewm(
+            span=n).mean().fillna(0)
         odr[f'EMA{n}_odr_loan'] = odr['odr_loan'].ewm(span=n).mean().fillna(0)
-        odr[f'EMA{n}_odr_client'] = odr['odr_client'].ewm(span=n).mean().fillna(0)
+        odr[f'EMA{n}_odr_client'] = odr['odr_client'].ewm(
+            span=n).mean().fillna(0)
     logging.info("Finished extending exponential moving average")
+
 
 def transform_se(odrs):
     """ Simple Exponential"""
     logging.info("Running simple exponential transformation")
-    
+
     for odr in odrs:
         odr['SE_odr_balance'] = odr['odr_balance'].apply(np.exp).fillna(0)
         odr['SE_odr_loan'] = odr['odr_loan'].apply(np.exp).fillna(0)
         odr['SE_odr_client'] = odr['odr_client'].apply(np.exp).fillna(0)
-    
+
     logging.info("Finished extending simple exponential")
+
 
 def extend_lag(data, t):
     logging.info("Extending the lag basis of {}".format(t))
     return data.shift(t)
 
+
 # odrs = [odr.set_index(['pt_date', 'pd_segment', 'tenor']) for odr in odrs]
-from scipy.stats import kendalltau, pearsonr, spearmanr
 
 """ Handling correlation test """
+
+
 def kendall_pval(x, y):
     logging.info("Running Kendall Tau p_value")
-    return kendalltau(x,y)[1]
+    return kendalltau(x, y)[1]
+
 
 def pearsonr_pval(x, y):
     logging.info("Running Pearson p_value {} items".format(len(x)))
     return pearsonr(x, y)[1]
 
+
 def spearmanr_pval(x, y):
     logging.info("Running Spearmann p_value")
-    return spearmanr(x,y)[1]
+    return spearmanr(x, y)[1]
+
 
 def kendall_corr(x, y):
     logging.info("Running Kendall Tau correlation")
-    return kendalltau(x,y)[0]
+    return kendalltau(x, y)[0]
+
 
 def pearsonr_corr(x, y):
-    logging.info("Running Pearson correlation {}".format((x,y)))
+    logging.info("Running Pearson correlation {}".format((x, y)))
     return pearsonr(x, y)[0]
 
+
 def spearmanr_corr(x, y):
-    logging.info("Running Spearmann correlation {}".format((x,y)))
-    return spearmanr(x,y)[0]
+    logging.info("Running Spearmann correlation {}".format((x, y)))
+    return spearmanr(x, y)[0]
+
 
 """ Handling assumption tests for combined variables 
     1. Linearity
@@ -200,19 +239,21 @@ def spearmanr_corr(x, y):
 """
 
 
-
 """ Handling OLS assumptions :
     1. The Error Term has Conditional Mean of Zero
     2. Independently and Identically Distributed Data
     3. Large Outliers are Unlikely
 """
-def mean_absolute_percentage_error(y_true, y_pred): 
+
+
+def mean_absolute_percentage_error(y_true, y_pred):
     y_true, y_pred = np.array(y_true), np.array(y_pred)
     mape = np.mean(np.abs((y_true - y_pred) / y_true))
     mape_rate = mape * 100
 
     logging.debug(f"MAPE of this model : {mape_rate}")
     return mape_rate
+
 
 """ Handling Time Series Forecast.
 Forecast Techniques:
@@ -257,10 +298,12 @@ def set_orders(types="ARIMA", p=10, d=2, q=10, m=0):
     d = range(d)
     m = range(m)
 
-    orders = {"AR": itertools.product(p), "ARMA": itertools.product(p, q), "ARIMA": itertools.product(p,d,q), "SARIMA": itertools.product(p,d,q,m)}
+    orders = {"AR": itertools.product(p), "ARMA": itertools.product(
+        p, q), "ARIMA": itertools.product(p, d, q), "SARIMA": itertools.product(p, d, q, m)}
     logging.debug(f"Total length of orders : {len(list(orders.get(types)))}")
-    
+
     return list(orders.get(types))
+
 
 def split_data(data: list, nrows=0) -> tuple:
     # Split dataset to train set and test set
@@ -273,12 +316,14 @@ def split_data(data: list, nrows=0) -> tuple:
 
     return (df_train, df_test)
 
+
 def do_acf_testing(data, lags):
     """Autocorrelation Function"""
     acf_org = plot_acf(data, lags=lags)
     plt.show()
 
     return acf_org
+
 
 def do_pacf_testing(data, lags):
     """ Partial Autocorrelation Function"""
@@ -287,32 +332,39 @@ def do_pacf_testing(data, lags):
 
     return pacf_org
 
+
 def do_dicky_fuller_test(data):
     """ADF testing or Augmented Dicky-Fuller to obtain the fitness of data given before ARIMA model step"""
     adf_test = st_tools.adfuller(data)
-    result = {"ADF Statistics": adf_test[0], "p-value": adf_test[1], "Critical Values": [(k, v) for k,v in adf_test[4].items()]}
+    result = {"ADF Statistics": adf_test[0], "p-value": adf_test[1],
+              "Critical Values": [(k, v) for k, v in adf_test[4].items()]}
     return result
+
 
 def manual_arima_test(data, p, d, q):
     """Perform MANUAL ARIMA by set p, q, d"""
-    model = ARIMA(data, order=(p,d,q))
+    model = ARIMA(data, order=(p, d, q))
     model_fit = model.fit()
     model_fit.summary()
 
+
 def auto_arima_test(data):
     """Perform AUTO ARIMA ordering and tests ARIMA"""
-    auto_arima = pm.auto_arima(data, trace=True, step=True, seasonal=True, with_intercept=True)
+    auto_arima = pm.auto_arima(
+        data, trace=True, step=True, seasonal=True, with_intercept=True)
     return (auto_arima, auto_arima.summary())
 
-def forecast_arima(data, n=None):    
+
+def forecast_arima(data, n=None):
     """Perform forecast"""
     if n is None:
         n = len(data)
-    
+
     forecast_auto = data.predict(n_periods=len(n))
     data['forecast_auto'] = [None] * len(data) + list(forecast_auto)
 
     return data['forecast_auto']
+
 
 def AutoRegression():
     from statsmodels.tsa.ar_model import AutoReg
@@ -326,6 +378,7 @@ def AutoRegression():
     yhat = model_fit.predict(len(data), len(data))
     print(yhat)
 
+
 def MovingAverage():
     from statsmodels.tsa.arima.model import ARIMA
     from random import random
@@ -337,6 +390,7 @@ def MovingAverage():
     # make prediction
     yhat = model_fit.predict(len(data), len(data))
     print(yhat)
+
 
 def ARMA():
     # ARMA example
@@ -351,6 +405,7 @@ def ARMA():
     yhat = model_fit.predict(len(data), len(data))
     print(yhat)
 
+
 def ARIMA():
     # ARIMA example
     from statsmodels.tsa.arima.model import ARIMA
@@ -363,6 +418,7 @@ def ARIMA():
     # make prediction
     yhat = model_fit.predict(len(data), len(data), typ='levels')
     print(yhat)
+
 
 def SARIMA():
     # SARIMA example
@@ -386,12 +442,14 @@ def SARIMAX():
     data1 = [x + random() for x in range(1, 100)]
     data2 = [x + random() for x in range(101, 200)]
     # fit model
-    model = SARIMAX(data1, exog=data2, order=(1, 1, 1), seasonal_order=(0, 0, 0, 0))
+    model = SARIMAX(data1, exog=data2, order=(
+        1, 1, 1), seasonal_order=(0, 0, 0, 0))
     model_fit = model.fit(disp=False)
     # make prediction
     exog2 = [200 + random()]
     yhat = model_fit.predict(len(data1), len(data1), exog=[exog2])
     print(yhat)
+
 
 def VAR():
     # VAR example
@@ -411,6 +469,7 @@ def VAR():
     yhat = model_fit.forecast(model_fit.y, steps=1)
     print(yhat)
 
+
 def VARMA():
     # VARMA example
     from statsmodels.tsa.statespace.varmax import VARMAX
@@ -428,6 +487,7 @@ def VARMA():
     # make prediction
     yhat = model_fit.forecast()
     print(yhat)
+
 
 def VARMAX():
     # VARMAX example
@@ -449,6 +509,7 @@ def VARMAX():
     yhat = model_fit.forecast(exog=data_exog2)
     print(yhat)
 
+
 def SES():
     # SES example
     from statsmodels.tsa.holtwinters import SimpleExpSmoothing
@@ -461,6 +522,7 @@ def SES():
     # make prediction
     yhat = model_fit.predict(len(data), len(data))
     print(yhat)
+
 
 def HWES():
     # Holt Winter's Exponential Smoothing (HWES) example
@@ -483,7 +545,7 @@ def HWES():
 #         odrs[i].to_csv(f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
 
 # def export_corr_and_variables(label, dirs, odrs, corr_odrs, pval_odrs, types="excel"):
-    
+
 #     if types == "excel":
 #         for item in range(len(label)):
 #             path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}.xlsx"
@@ -507,8 +569,8 @@ def HWES():
 #             pval_odrs[item].to_csv(f"{path}_pval_odrs.csv")
 
 #             logging.info("Finished exporting to {}".format(path))
-    
-#     else: 
+
+#     else:
 #         raise TypeError("No parameter for file type match.")
 
 # export_odr(variables[0][1])
@@ -534,7 +596,7 @@ def HWES():
 #     @staticmethod
 #     def add_growth(t:str) -> list:
 #         pass
-    
+
 #     @staticmethod
 #     def add_moving_average(t: str) -> list:
 #         pass
@@ -578,7 +640,7 @@ def add_extension(x):
 #             dirs = {f"{item[0]}_dir": item[1] for item in config_file['file'].items() if isinstance(item[1], str)}
 
 #             for item in _parse:
-#                 if isinstance(item[1], list): 
+#                 if isinstance(item[1], list):
 #                     logging.info("Found file configurations of {}. Setting up {} files".format(item[0], len(item[1])))
 #                     logging.info("Registered files : {}".format(", ".join(item[1])))
 #                 elif isinstance(item[1], str):
@@ -615,14 +677,14 @@ def add_extension(x):
 #             x_ext = [x.lower() for x in config_file['configuration']['variable']['x']['extend'].keys()]
 #             y_ext_params = [str(y).lower() for y in config_file['configuration']['variable']['y']['extend'].values()]
 #             x_ext_params = [str(x).lower() for x in config_file['configuration']['variable']['x']['extend'].values()]
-            
+
 #             """ List of Transformations Features """
 #             _fe = {"growth": "_g", "delta": "_d", "exponential": "_exp", "variance": "_v", "lag": "_lag", "lead": "_lea", "z_score": "_z", "simple_ma": "_sma", "cumulative_ma": "_cma", "exponential_ma": "_ema", "ln": "_ln", "logbase": "_lb", "logit": "_logit"}
 #             _fr = {"day": "d", "monthly": "m", "quarterly": "q", "semesterly": "h", "yearly": "y"}
 
 #             print(x_ext, x_ext_params)
 
-#         except BaseException: 
+#         except BaseException:
 #             logging.error("Coba cek lagi section untuk konfigurasinya.")
 
 
@@ -694,12 +756,12 @@ class NodeCommand:
         if position == index:
             self.insertAtBegin(data)
         else:
-            while(current_node != None and position+1 != index):
+            while (current_node != None and position+1 != index):
                 position = position+1
                 current_node = current_node.next
- 
+
             if current_node != None:
- 
+
                 new_node.next = current_node.next
                 current_node.next = new_node
             else:
@@ -710,11 +772,11 @@ class NodeCommand:
         if self.head is None:
             self.head = new_node
             return
-    
+
         current_node = self.head
-        while(current_node.next):
+        while (current_node.next):
             current_node = current_node.next
-    
+
         current_node.next = new_node
 
     def updateNode(self, val, index):
@@ -723,30 +785,31 @@ class NodeCommand:
         if position == index:
             current_node.data = val
         else:
-            while(current_node != None and position != index):
+            while (current_node != None and position != index):
                 position = position+1
                 current_node = current_node.next
-    
+
             if current_node != None:
                 current_node.data = val
             else:
                 print("Index not present")
 
     def remove_first_node(self):
-        if(self.head == None):
+        if (self.head == None):
             return
-        
+
         self.head = self.head.next
 
     def remove_last_node(self):
         if self.head is None:
             return
-    
+
         current_node = self.head
-        while(current_node.next.next):
+        while (current_node.next.next):
             current_node = current_node.next
-    
+
         current_node.next = None
+
 
 class MissingValue:
     _m = (None, "fill_interpolate", )
@@ -760,10 +823,11 @@ class MissingValue:
     def fill_fwd_value(data):
         return pd.concat(data, axis=1).sort_values('Date').bfill().fillna(0)
 
+
 class OLS:
     _t = ["autocorrelation", "heteroscedasticity", "normality"]
-    
-    def mean_absolute_percentage_error(y_true, y_pred): 
+
+    def mean_absolute_percentage_error(y_true, y_pred):
         y_true, y_pred = np.array(y_true), np.array(y_pred)
         mape = np.mean(np.abs((y_true - y_pred) / y_true))
         mape_rate = mape * 100
@@ -771,8 +835,10 @@ class OLS:
         logging.debug(f"MAPE of this model : {mape_rate}")
         return mape_rate
 
+
 class Extend:
-    _le = [(None, "z_score", transform_zscore, 10), (None, "add_growth", add_growth, 10), (None, "lag", extend_lag, "1Q"), (None, "lag", extend_lag, "3Q")]
+    _le = [(None, "z_score", transform_zscore, 10), (None, "add_growth", add_growth,
+                                                     10), (None, "lag", extend_lag, "1Q"), (None, "lag", extend_lag, "3Q")]
 
     def add_growth(data, k):
         pass
@@ -802,7 +868,7 @@ class Extend:
             odr['Logit_odr_client'] = odr['odr_client'].apply(sp.logit)
 
         logging.info("Finished extending logit")
-        
+
     def transform_log10(odrs):
         """Transform data to logarithmic base 10"""
         logging.info("Running logarithmic base 10 transformation")
@@ -812,7 +878,7 @@ class Extend:
             odr['ln_odr_client'] = np.log10(odr['odr_client'])
 
         logging.info("Finished extending logarithmic base 10")
-        
+
     def transform_log2(odrs):
         """Transform data to logarithmic base 2"""
         logging.info("Running logarithmic base 2 transformation")
@@ -835,43 +901,53 @@ class Extend:
         """ Simple Moving Average for list of ODRS"""
         logging.info("Running simple moving average transformation")
         for odr in odrs:
-            odr[f'SMA{n}_odr_balance'] = odr['odr_balance'].rolling(n).mean().fillna(0)
-            odr[f'SMA{n}_odr_loan'] = odr['odr_loan'].rolling(n).mean().fillna(0)
-            odr[f'SMA{n}_odr_client'] = odr['odr_client'].rolling(n).mean().fillna(0)
+            odr[f'SMA{n}_odr_balance'] = odr['odr_balance'].rolling(
+                n).mean().fillna(0)
+            odr[f'SMA{n}_odr_loan'] = odr['odr_loan'].rolling(
+                n).mean().fillna(0)
+            odr[f'SMA{n}_odr_client'] = odr['odr_client'].rolling(
+                n).mean().fillna(0)
         logging.info("Finished extending simple moving average")
-        
+
     def transform_cma(odrs, n=12):
         """ Cumulative Moving Average for list of ODRS"""
         logging.info("Running cumulative moving average transformation")
         for odr in odrs:
-            odr[f'CMA{n}_odr_balance'] = odr['odr_balance'].expanding(n).mean().fillna(0)
-            odr[f'CMA{n}_odr_loan'] = odr['odr_loan'].expanding(n).mean().fillna(0)
-            odr[f'CMA{n}_odr_client'] = odr['odr_client'].expanding(n).mean().fillna(0)
+            odr[f'CMA{n}_odr_balance'] = odr['odr_balance'].expanding(
+                n).mean().fillna(0)
+            odr[f'CMA{n}_odr_loan'] = odr['odr_loan'].expanding(
+                n).mean().fillna(0)
+            odr[f'CMA{n}_odr_client'] = odr['odr_client'].expanding(
+                n).mean().fillna(0)
         logging.info("Finished extending cumulative moving average")
 
     def transform_ema(odrs, n=12):
         """ Exponential Moving Average for list of ODRS"""
         logging.info("Running exponential moving average transformation")
         for odr in odrs:
-            odr[f'EMA{n}_odr_balance'] = odr['odr_balance'].ewm(span=n).mean().fillna(0)
-            odr[f'EMA{n}_odr_loan'] = odr['odr_loan'].ewm(span=n).mean().fillna(0)
-            odr[f'EMA{n}_odr_client'] = odr['odr_client'].ewm(span=n).mean().fillna(0)
+            odr[f'EMA{n}_odr_balance'] = odr['odr_balance'].ewm(
+                span=n).mean().fillna(0)
+            odr[f'EMA{n}_odr_loan'] = odr['odr_loan'].ewm(
+                span=n).mean().fillna(0)
+            odr[f'EMA{n}_odr_client'] = odr['odr_client'].ewm(
+                span=n).mean().fillna(0)
         logging.info("Finished extending exponential moving average")
 
     def transform_se(odrs):
         """ Simple Exponential"""
         logging.info("Running simple exponential transformation")
-        
+
         for odr in odrs:
             odr['SE_odr_balance'] = odr['odr_balance'].apply(np.exp).fillna(0)
             odr['SE_odr_loan'] = odr['odr_loan'].apply(np.exp).fillna(0)
             odr['SE_odr_client'] = odr['odr_client'].apply(np.exp).fillna(0)
-        
+
         logging.info("Finished extending simple exponential")
 
     def extend_lag(data, t):
         logging.info("Extending the lag basis of {}".format(t))
         return data.shift(t)
+
 
 class Correlation:
     _m = "pearsonr_corr"
@@ -888,7 +964,7 @@ class Correlation:
 
     def kendall_pval(x, y):
         logging.info("Running Kendall Tau p_value")
-        return kendalltau(x,y)[1]
+        return kendalltau(x, y)[1]
 
     def pearsonr_pval(x, y):
         logging.info("Running Pearson p_value {} items".format(len(x)))
@@ -896,19 +972,20 @@ class Correlation:
 
     def spearmanr_pval(x, y):
         logging.info("Running Spearmann p_value")
-        return spearmanr(x,y)[1]
+        return spearmanr(x, y)[1]
 
     def kendall_corr(x, y):
         logging.info("Running Kendall Tau correlation")
-        return kendalltau(x,y)[0]
+        return kendalltau(x, y)[0]
 
     def pearsonr_corr(x, y):
-        logging.info("Running Pearson correlation {}".format((x,y)))
+        logging.info("Running Pearson correlation {}".format((x, y)))
         return pearsonr(x, y)[0]
 
     def spearmanr_corr(x, y):
-        logging.info("Running Spearmann correlation {}".format((x,y)))
-        return spearmanr(x,y)[0]
+        logging.info("Running Spearmann correlation {}".format((x, y)))
+        return spearmanr(x, y)[0]
+
 
 class Forecast:
     _p = []
@@ -934,16 +1011,18 @@ class Forecast:
         "simple_exponential": SES,
         "holt_winter": HWES
     }
-    
+
     def set_orders(types="ARIMA", p=10, d=2, q=10, m=0):
         p = range(p)
         q = range(q)
         d = range(d)
         m = range(m)
 
-        orders = {"AR": itertools.product(p), "ARMA": itertools.product(p, q), "ARIMA": itertools.product(p,d,q), "SARIMA": itertools.product(p,d,q,m)}
-        logging.debug(f"Total length of orders : {len(list(orders.get(types)))}")
-        
+        orders = {"AR": itertools.product(p), "ARMA": itertools.product(
+            p, q), "ARIMA": itertools.product(p, d, q), "SARIMA": itertools.product(p, d, q, m)}
+        logging.debug(
+            f"Total length of orders : {len(list(orders.get(types)))}")
+
         return list(orders.get(types))
 
     def split_data(data: list, nrows=0) -> tuple:
@@ -974,25 +1053,27 @@ class Forecast:
     def do_dicky_fuller_test(data):
         """ADF testing or Augmented Dicky-Fuller to obtain the fitness of data given before ARIMA model step"""
         adf_test = st_tools.adfuller(data)
-        result = {"ADF Statistics": adf_test[0], "p-value": adf_test[1], "Critical Values": [(k, v) for k,v in adf_test[4].items()]}
+        result = {"ADF Statistics": adf_test[0], "p-value": adf_test[1],
+                  "Critical Values": [(k, v) for k, v in adf_test[4].items()]}
         return result
 
     def manual_arima_test(data, p, d, q):
         """Perform MANUAL ARIMA by set p, q, d"""
-        model = ARIMA(data, order=(p,d,q))
+        model = ARIMA(data, order=(p, d, q))
         model_fit = model.fit()
         model_fit.summary()
 
     def auto_arima_test(data):
         """Perform AUTO ARIMA ordering and tests ARIMA"""
-        auto_arima = pm.auto_arima(data, trace=True, step=True, seasonal=True, with_intercept=True)
+        auto_arima = pm.auto_arima(
+            data, trace=True, step=True, seasonal=True, with_intercept=True)
         return (auto_arima, auto_arima.summary())
 
-    def forecast_arima(data, n=None):    
+    def forecast_arima(data, n=None):
         """Perform forecast"""
         if n is None:
             n = len(data)
-        
+
         forecast_auto = data.predict(n_periods=len(n))
         data['forecast_auto'] = [None] * len(data) + list(forecast_auto)
 
@@ -1061,7 +1142,6 @@ class Forecast:
         yhat = model_fit.predict(len(data), len(data))
         print(yhat)
 
-
     def SARIMAX():
         # SARIMAX example
         from statsmodels.tsa.statespace.sarimax import SARIMAX
@@ -1070,7 +1150,8 @@ class Forecast:
         data1 = [x + random() for x in range(1, 100)]
         data2 = [x + random() for x in range(101, 200)]
         # fit model
-        model = SARIMAX(data1, exog=data2, order=(1, 1, 1), seasonal_order=(0, 0, 0, 0))
+        model = SARIMAX(data1, exog=data2, order=(
+            1, 1, 1), seasonal_order=(0, 0, 0, 0))
         model_fit = model.fit(disp=False)
         # make prediction
         exog2 = [200 + random()]
@@ -1159,6 +1240,8 @@ class Forecast:
         # make prediction
         yhat = model_fit.predict(len(data), len(data))
         print(yhat)
+
+
 @dataclass
 class FileHandler:
     name: str = field(default=None)
@@ -1170,6 +1253,8 @@ class FileHandler:
             logging.warning("File not setup properly")
         else:
             raise FileNotFoundError(self.name)
+
+
 @dataclass
 class DirHandler:
     name: str = field(default=None)
@@ -1181,24 +1266,31 @@ class DirHandler:
             logging.warning("Directory not setup properly")
         else:
             raise FileNotFoundError(self.name)
+
+
 @dataclass
 class Statistic:
     name: str = field(default=None)
     method: str = field(default=None)
     func: Callable[[int], int] = field(default=None)
+
+
 @dataclass
 class StatisticalProcedure:
     proc: Statistic
     output: FileHandler
     parameters: list = field(default_factory=[dict])
     backtest: list = field(default_factory=[dict])
-    model_selection : list = field(default_factory=[dict])
+    model_selection: list = field(default_factory=[dict])
+
+
 @dataclass
 class StatisticalOutputProcedure:
     name: FileHandler
     statistical: StatisticalProcedure
     files: list = field(default_factory=[StatisticalProcedure])
     dirs: list = field(default_factory=[DirHandler])
+
 
 class Core:
     def __init__(self):
@@ -1214,20 +1306,28 @@ class Core:
 
             try:
                 _config = [x for x in config_file['configuration'].items()]
-                y_base = [y.lower() for y in config_file['configuration']['variable']['y']['base']]
-                x_base = [x.lower() for x in config_file['configuration']['variable']['x']['base']]
-                y_ext = [y.lower() for y in config_file['configuration']['variable']['y']['extend'].keys()]
-                x_ext = [x.lower() for x in config_file['configuration']['variable']['x']['extend'].keys()]
-                y_ext_params = [str(y).lower() for y in config_file['configuration']['variable']['y']['extend'].values()]
-                x_ext_params = [str(x).lower() for x in config_file['configuration']['variable']['x']['extend'].values()]
-                
+                y_base = [y.lower() for y in config_file['configuration']
+                          ['variable']['y']['base']]
+                x_base = [x.lower() for x in config_file['configuration']
+                          ['variable']['x']['base']]
+                y_ext = [y.lower() for y in config_file['configuration']
+                         ['variable']['y']['extend'].keys()]
+                x_ext = [x.lower() for x in config_file['configuration']
+                         ['variable']['x']['extend'].keys()]
+                y_ext_params = [str(y).lower(
+                ) for y in config_file['configuration']['variable']['y']['extend'].values()]
+                x_ext_params = [str(x).lower(
+                ) for x in config_file['configuration']['variable']['x']['extend'].values()]
+
                 """ List of Transformations Features """
-                _fe = {"growth": "_g", "delta": "_d", "exponential": "_exp", "variance": "_v", "lag": "_lag", "lead": "_lea", "z_score": "_z", "simple_ma": "_sma", "cumulative_ma": "_cma", "exponential_ma": "_ema", "ln": "_ln", "logbase": "_lb", "logit": "_logit"}
-                _fr = {"day": "d", "monthly": "m", "quarterly": "q", "semesterly": "h", "yearly": "y"}
+                _fe = {"growth": "_g", "delta": "_d", "exponential": "_exp", "variance": "_v", "lag": "_lag", "lead": "_lea", "z_score": "_z",
+                       "simple_ma": "_sma", "cumulative_ma": "_cma", "exponential_ma": "_ema", "ln": "_ln", "logbase": "_lb", "logit": "_logit"}
+                _fr = {"day": "d", "monthly": "m", "quarterly": "q",
+                       "semesterly": "h", "yearly": "y"}
 
                 print(x_ext, x_ext_params)
 
-            except BaseException: 
+            except BaseException:
                 logging.error("Coba cek lagi section untuk konfigurasinya.")
 
     def parsing_file_config(self):
@@ -1236,29 +1336,37 @@ class Core:
 
             try:
                 _parse = [item for item in config_file['file'].items()]
-                files = {f"{item[0]}_files": item[1] for item in config_file['file'].items() if isinstance(item[1], list)}
-                dirs = {f"{item[0]}_dir": item[1] for item in config_file['file'].items() if isinstance(item[1], str)}
+                files = {f"{item[0]}_files": item[1] for item in config_file['file'].items(
+                ) if isinstance(item[1], list)}
+                dirs = {f"{item[0]}_dir": item[1] for item in config_file['file'].items(
+                ) if isinstance(item[1], str)}
 
                 for item in _parse:
-                    if isinstance(item[1], list): 
-                        logging.info("Found file configurations of {}. Setting up {} files".format(item[0], len(item[1])))
-                        logging.info("Registered files : {}".format(", ".join(item[1])))
+                    if isinstance(item[1], list):
+                        logging.info("Found file configurations of {}. Setting up {} files".format(
+                            item[0], len(item[1])))
+                        logging.info("Registered files : {}".format(
+                            ", ".join(item[1])))
                     elif isinstance(item[1], str):
-                        logging.info("Found directory configurations of {}. Setting up {} directories".format(item[0], item[1]))
-                        logging.info("Registered directories : {}".format(item[1]))
+                        logging.info("Found directory configurations of {}. Setting up {} directories".format(
+                            item[0], item[1]))
+                        logging.info(
+                            "Registered directories : {}".format(item[1]))
                     else:
                         raise TypeError("No files or directories found")
 
-                return {"files": files, "dirs" : dirs}
-            
+                return {"files": files, "dirs": dirs}
+
             except KeyError as e:
                 logging.warning(f"Key configuration for {e} not found")
 
             except FileNotFoundError as e:
-                logging.error(f"Location in {e} not found. Check again the files or directories in configuration file")
+                logging.error(
+                    f"Location in {e} not found. Check again the files or directories in configuration file")
 
             except BaseException:
-                logging.error("Sorry, cannot setup the configuration files. Please check the input and output section again.")
+                logging.error(
+                    "Sorry, cannot setup the configuration files. Please check the input and output section again.")
 
             except:
                 logging.error("Something went wrong.")
@@ -1267,10 +1375,11 @@ class Core:
     def export_odr(odrs):
         """ Handling export to file """
         for i in range(len(odrs)):
-            odrs[i].to_csv(f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
+            odrs[i].to_csv(
+                f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
 
     def export_corr_and_variables(self, label, dirs, odrs, corr_odrs, pval_odrs, types="excel"):
-        
+
         if types == "excel":
             for item in range(len(label)):
                 path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}.xlsx"
@@ -1293,9 +1402,9 @@ class Core:
                 pval_odrs[item].to_csv(f"{path}_pval_odrs.csv")
 
                 logging.info("Finished exporting to {}".format(path))
-        else: 
+        else:
             raise TypeError("No parameter for file type match.")
-        
+
     def build_procedure(self):
         pass
 
@@ -1304,13 +1413,17 @@ class Core:
         config = self.parsing_config()
         # print(x_extension)
         # print(x_base)
-        proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
-        odr = pd.read_csv(files['files']['odr_files'][0], index_col=["qoq_date", "pt_date","pd_segment", "tenor"],parse_dates=['qoq_date', 'pt_date'])
+        proxy_odr = pd.read_excel(
+            "./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
+        odr = pd.read_csv(files['files']['odr_files'][0], index_col=[
+                          "qoq_date", "pt_date", "pd_segment", "tenor"], parse_dates=['qoq_date', 'pt_date'])
 
-        mev_combine = [pd.read_csv(file, low_memory=True, parse_dates=['Date']) for file in files['files']['mev_files']]
+        mev_combine = [pd.read_csv(file, low_memory=True, parse_dates=[
+                                   'Date']) for file in files['files']['mev_files']]
         mev_combine = [data.set_index("Date") for data in mev_combine]
         mev_combine = fill_last_value(mev_combine)
-        mev_combine = mev_combine.loc[mev_combine.index == mev_combine.index.to_period('M').to_timestamp('M')]
+        mev_combine = mev_combine.loc[mev_combine.index ==
+                                      mev_combine.index.to_period('M').to_timestamp('M')]
 
         """Execution Proxy ODR"""
         fill_odr = proxy_odr.iloc[:].ffill()
@@ -1322,19 +1435,28 @@ class Core:
         """Execution combination variables Between ODR and MEV"""
         transform_zscore(odrs)
         odrs = [odr.reset_index().set_index('qoq_date') for odr in odrs]
-        odrs = [pd.concat([odr, mev_combine], axis=1).ffill().fillna(0) for odr in odrs]
-        label = [(odr['pd_segment'].iloc[-1], odr['tenor'].iloc[-1]) for odr in odrs]
-        odrs = [x.drop(['pt_date', 'pd_segment', 'tenor'], axis=1) for x in odrs]
+        odrs = [pd.concat([odr, mev_combine], axis=1).ffill().fillna(0)
+                for odr in odrs]
+        label = [(odr['pd_segment'].iloc[-1], odr['tenor'].iloc[-1])
+                 for odr in odrs]
+        odrs = [x.drop(['pt_date', 'pd_segment', 'tenor'], axis=1)
+                for x in odrs]
 
         corr_odrs = [x.corr() for x in odrs]
         pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
-        self.export_corr_and_variables(label=label, dirs=files['dirs'], odrs=odrs, corr_odrs=corr_odrs, pval_odrs=pval_odrs)
+        self.export_corr_and_variables(
+            label=label, dirs=files['dirs'], odrs=odrs, corr_odrs=corr_odrs, pval_odrs=pval_odrs)
+
 
 procedure = collections.deque()
 
+
 class KeyValidator:
-    _k = {"y_variable", "x_variable", "forecast", "single_factor", "multiple_factor"}
+    _k = {"y_variable", "x_variable", "forecast",
+          "single_factor", "multiple_factor"}
     _o_dir = "/output"
+
+
 class JSONFile:
     _ext = ".json"
 
@@ -1347,7 +1469,7 @@ class JSONFile:
         self._cwd = None
 
     def generate_param_keys(self):
-        x = ['parameters', "configurations" ]
+        x = ['parameters', "configurations"]
         for k in x:
             for i in range(1, len(k)+1):
                 for c in itertools.permutations(k, i):
@@ -1371,30 +1493,33 @@ class JSONFile:
 
         for item in items:
             if isinstance(item[1], list):
-                logging.info("Reading key list : %s. Found %s length values", item[0], len(item[1]))
-                self._set_list.append({item[0] : item[1]})
+                logging.info(
+                    "Reading key list : %s. Found %s length values", item[0], len(item[1]))
+                self._set_list.append({item[0]: item[1]})
                 procedure.append(item[0])
 
             elif isinstance(item[1], dict):
-                logging.info("Reading key dict : %s. Found %s pair subkeys", item[0], len(item[1].keys()))
-                self._set_dict.append({item[0] : item[1]})
+                logging.info(
+                    "Reading key dict : %s. Found %s pair subkeys", item[0], len(item[1].keys()))
+                self._set_dict.append({item[0]: item[1]})
                 procedure.append(item[0])
-            
+
             elif isinstance(item[1], str):
                 logging.info("Reading key : %s. Validating ...", item[0])
 
                 if os.path.exists(item[1]):
                     self._cwd = item[1]
-                    logging.info("Get output dir on : %s. Success validation", item[0])
+                    logging.info(
+                        "Get output dir on : %s. Success validation", item[0])
                 else:
-                    logging.error("Cannot get output dir on : %s. Fail validation", item[0])
+                    logging.error(
+                        "Cannot get output dir on : %s. Fail validation", item[0])
                     raise FileExistsError
 
-        
     def read_values(self) -> None:
         self._read_file()
         values = self.text.values()
-        
+
         for item in values:
             logging.info("Reading value : %s", item)
             if item in self._file_keys:
@@ -1403,8 +1528,11 @@ class JSONFile:
                 logging.info("\"%s\" matched. Found param keys", item)
             else:
                 logging.info("\"%s\" not matched. File key not found", item)
+
+
 class XMLFile:
     _ext = ".xml"
+
     def __init__(self, file):
         self._f = file
         self._file_keys = []
@@ -1413,7 +1541,7 @@ class XMLFile:
         self._set_dict = []
 
     def generate_param_keys(self):
-        x = ['parameters', "configurations" ]
+        x = ['parameters', "configurations"]
         for k in x:
             for i in range(1, len(k)+1):
                 for c in itertools.permutations(k, i):
@@ -1450,12 +1578,13 @@ class XMLFile:
                     logging.info("Building sub procedure ... %s", subitem)
                 elif isinstance(subitem, dict):
                     parameters.append(subitem)
-                    logging.info("Building procedure parameters ... %s", subitem)
-        
+                    logging.info(
+                        "Building procedure parameters ... %s", subitem)
+
     def read_values(self) -> None:
         self._read_file()
         values = self.text.values()
-        
+
         for item in values:
             logging.info("Reading value : %s", item)
             if item in self._file_keys:
@@ -1464,15 +1593,20 @@ class XMLFile:
                 logging.info("\"%s\" matched. Found param keys", item)
             else:
                 logging.info("\"%s\" not matched. File key not found", item)
+
+
 class ExcelFile:
     """ Interpret the file format of Excel"""
     _ext = ".xlsx"
     pass
 
+
 class CSVFile:
     """ Interpret the file format of CSV"""
     _ext = ".csv"
     pass
+
+
 class App:
     def __init__(self):
         self._f = None
@@ -1483,18 +1617,18 @@ class App:
     @property
     def set_file(self):
         return self._f
-    
+
     @set_file.setter
     def set_file(self, file):
         logging.info("Read parameter %s ...", str(file))
 
         if not isinstance(file, str):
             raise ValueError("File must be a string")
-        
+
         if not os.path.exists(file):
             logging.error("File not found %s", str(file))
             raise FileNotFoundError(file)
-        
+
         self._p = os.path.abspath(file)
         self._f = os.path.basename(file)
 
@@ -1508,20 +1642,28 @@ class App:
 
             try:
                 _config = [x for x in config_file['configuration'].items()]
-                y_base = [y.lower() for y in config_file['configuration']['variable']['y']['base']]
-                x_base = [x.lower() for x in config_file['configuration']['variable']['x']['base']]
-                y_ext = [y.lower() for y in config_file['configuration']['variable']['y']['extend'].keys()]
-                x_ext = [x.lower() for x in config_file['configuration']['variable']['x']['extend'].keys()]
-                y_ext_params = [str(y).lower() for y in config_file['configuration']['variable']['y']['extend'].values()]
-                x_ext_params = [str(x).lower() for x in config_file['configuration']['variable']['x']['extend'].values()]
-                
+                y_base = [y.lower() for y in config_file['configuration']
+                          ['variable']['y']['base']]
+                x_base = [x.lower() for x in config_file['configuration']
+                          ['variable']['x']['base']]
+                y_ext = [y.lower() for y in config_file['configuration']
+                         ['variable']['y']['extend'].keys()]
+                x_ext = [x.lower() for x in config_file['configuration']
+                         ['variable']['x']['extend'].keys()]
+                y_ext_params = [str(y).lower(
+                ) for y in config_file['configuration']['variable']['y']['extend'].values()]
+                x_ext_params = [str(x).lower(
+                ) for x in config_file['configuration']['variable']['x']['extend'].values()]
+
                 """ List of Transformations Features """
-                _fe = {"growth": "_g", "delta": "_d", "exponential": "_exp", "variance": "_v", "lag": "_lag", "lead": "_lea", "z_score": "_z", "simple_ma": "_sma", "cumulative_ma": "_cma", "exponential_ma": "_ema", "ln": "_ln", "logbase": "_lb", "logit": "_logit"}
-                _fr = {"day": "d", "monthly": "m", "quarterly": "q", "semesterly": "h", "yearly": "y"}
+                _fe = {"growth": "_g", "delta": "_d", "exponential": "_exp", "variance": "_v", "lag": "_lag", "lead": "_lea", "z_score": "_z",
+                       "simple_ma": "_sma", "cumulative_ma": "_cma", "exponential_ma": "_ema", "ln": "_ln", "logbase": "_lb", "logit": "_logit"}
+                _fr = {"day": "d", "monthly": "m", "quarterly": "q",
+                       "semesterly": "h", "yearly": "y"}
 
                 print(x_ext, x_ext_params)
 
-            except BaseException: 
+            except BaseException:
                 logging.error("Coba cek lagi section untuk konfigurasinya.")
 
     def parsing_file_config(self):
@@ -1530,29 +1672,37 @@ class App:
 
             try:
                 _parse = [item for item in config_file['file'].items()]
-                files = {f"{item[0]}_files": item[1] for item in config_file['file'].items() if isinstance(item[1], list)}
-                dirs = {f"{item[0]}_dir": item[1] for item in config_file['file'].items() if isinstance(item[1], str)}
+                files = {f"{item[0]}_files": item[1] for item in config_file['file'].items(
+                ) if isinstance(item[1], list)}
+                dirs = {f"{item[0]}_dir": item[1] for item in config_file['file'].items(
+                ) if isinstance(item[1], str)}
 
                 for item in _parse:
-                    if isinstance(item[1], list): 
-                        logging.info("Found file configurations of {}. Setting up {} files".format(item[0], len(item[1])))
-                        logging.info("Registered files : {}".format(", ".join(item[1])))
+                    if isinstance(item[1], list):
+                        logging.info("Found file configurations of {}. Setting up {} files".format(
+                            item[0], len(item[1])))
+                        logging.info("Registered files : {}".format(
+                            ", ".join(item[1])))
                     elif isinstance(item[1], str):
-                        logging.info("Found directory configurations of {}. Setting up {} directories".format(item[0], item[1]))
-                        logging.info("Registered directories : {}".format(item[1]))
+                        logging.info("Found directory configurations of {}. Setting up {} directories".format(
+                            item[0], item[1]))
+                        logging.info(
+                            "Registered directories : {}".format(item[1]))
                     else:
                         raise TypeError("No files or directories found")
 
-                return {"files": files, "dirs" : dirs}
-            
+                return {"files": files, "dirs": dirs}
+
             except KeyError as e:
                 logging.warning(f"Key configuration for {e} not found")
 
             except FileNotFoundError as e:
-                logging.error(f"Location in {e} not found. Check again the files or directories in configuration file")
+                logging.error(
+                    f"Location in {e} not found. Check again the files or directories in configuration file")
 
             except BaseException:
-                logging.error("Sorry, cannot setup the configuration files. Please check the input and output section again.")
+                logging.error(
+                    "Sorry, cannot setup the configuration files. Please check the input and output section again.")
 
             except:
                 logging.error("Something went wrong.")
@@ -1561,10 +1711,11 @@ class App:
     def export_odr(odrs):
         """ Handling export to file """
         for i in range(len(odrs)):
-            odrs[i].to_csv(f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
+            odrs[i].to_csv(
+                f"./file/odr_python/py_odr_{odrs[i].index[0][2]}_{odrs[i].index[0][3]}.csv", mode="w")
 
     def export_corr_and_variables(self, label, dirs, odrs, corr_odrs, pval_odrs, types="excel"):
-        
+
         if types == "excel":
             for item in range(len(label)):
                 path = f"./{dirs['output_dir']}/py_{label[item][0]}_{label[item][1]}.xlsx"
@@ -1587,21 +1738,25 @@ class App:
                 pval_odrs[item].to_csv(f"{path}_pval_odrs.csv")
 
                 logging.info("Finished exporting to {}".format(path))
-        else: 
+        else:
             raise TypeError("No parameter for file type match.")
-        
+
     def mainloop(self):
         files = self.parsing_file_config()
         config = self.parsing_config()
         # print(x_extension)
         # print(x_base)
-        proxy_odr = pd.read_excel("./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
-        odr = pd.read_csv(files['files']['odr_files'][0], index_col=["qoq_date", "pt_date","pd_segment", "tenor"],parse_dates=['qoq_date', 'pt_date'])
+        proxy_odr = pd.read_excel(
+            "./file/test/ODR Tracking - OJK Buku 3.xlsx", sheet_name="OJK Historical ODR")
+        odr = pd.read_csv(files['files']['odr_files'][0], index_col=[
+                          "qoq_date", "pt_date", "pd_segment", "tenor"], parse_dates=['qoq_date', 'pt_date'])
 
-        mev_combine = [pd.read_csv(file, low_memory=True, parse_dates=['Date']) for file in files['files']['mev_files']]
+        mev_combine = [pd.read_csv(file, low_memory=True, parse_dates=[
+                                   'Date']) for file in files['files']['mev_files']]
         mev_combine = [data.set_index("Date") for data in mev_combine]
         mev_combine = fill_last_value(mev_combine)
-        mev_combine = mev_combine.loc[mev_combine.index == mev_combine.index.to_period('M').to_timestamp('M')]
+        mev_combine = mev_combine.loc[mev_combine.index ==
+                                      mev_combine.index.to_period('M').to_timestamp('M')]
 
         """Execution Proxy ODR"""
         fill_odr = proxy_odr.iloc[:].ffill()
@@ -1613,9 +1768,12 @@ class App:
         """Execution combination variables Between ODR and MEV"""
         transform_zscore(odrs)
         odrs = [odr.reset_index().set_index('qoq_date') for odr in odrs]
-        odrs = [pd.concat([odr, mev_combine], axis=1).ffill().fillna(0) for odr in odrs]
-        label = [(odr['pd_segment'].iloc[-1], odr['tenor'].iloc[-1]) for odr in odrs]
-        odrs = [x.drop(['pt_date', 'pd_segment', 'tenor'], axis=1) for x in odrs]
+        odrs = [pd.concat([odr, mev_combine], axis=1).ffill().fillna(0)
+                for odr in odrs]
+        label = [(odr['pd_segment'].iloc[-1], odr['tenor'].iloc[-1])
+                 for odr in odrs]
+        odrs = [x.drop(['pt_date', 'pd_segment', 'tenor'], axis=1)
+                for x in odrs]
 
         corr_odrs = [x.corr() for x in odrs]
         pval_odrs = [x.corr(method=pearsonr_pval) for x in odrs]
@@ -1627,12 +1785,12 @@ class App:
 
         formatter = self._f.split(".")[-1]
         working_path = Path(self._f).absolute()
-        
+
         if formatter == "json":
             config = JSONFile(self._f)
             logging.info(config.read_keys())
             self.mainloop()
-            
+
         if formatter == "xml":
             config = XMLFile(self._f)
             logging.info(config.read_keys())
@@ -1650,7 +1808,7 @@ class App:
 
 #     """ Lies the main runner program """
 #     app = App()
-    
+
 #     if arg.file is None:
 #         app.set_file = "./file/config.json"
 #     else:
