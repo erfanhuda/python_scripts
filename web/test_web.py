@@ -1,33 +1,28 @@
 import eel
 import psycopg2
-from psycopg2 import sql
+from jinja2 import Environment, FileSystemLoader
 
 
-def query():
-    conn = psycopg2.connect(host='127.0.0.1', port=5432,
-                            user='postgres', password='Erfnhd123890', dbname="finance_project")
-    raw = sql.SQL("SELECT {} FROM {}").format(sql.Identifier(
-        "table", "field"), sql.Identifier("public", "table"))
-    print(raw)
+class Connection:
+    def __init__(self):
+        self.conn = psycopg2.connect(
+            host="localhost",
+            database="finance_project",
+            user="postgres",
+            password="Erfnhd123890")
+        self.conn.autocommit = True
 
 
-def connect():
-    conn = psycopg2.connect(host='127.0.0.1', port=5432,
-                            user='postgres', password='Erfnhd123890', dbname="finance_project")
-    cursor = conn.cursor(scrollable=True, name="ecl_query")
-    cursor.execute(
-        "select * from public.bv_ecl_process_det13_20231031 where account_no = '1471000023';")
-
-    # cursor.scrollable = True
-    print(cursor.scroll(100*100))
-
-    lobject = conn.lobject(mode='r')
-
-    lobject.read()
+files = FileSystemLoader('templates')
+environment = Environment(loader=files)
+template = environment.from_string("Hello, {{name}}")
+template.render(name="World")
 
 
-query()
+def main():
+    eel.init("public")
+    eel.start("template.html")
 
-eel.init('web/public')
 
-eel.start('base.html')
+if __name__ == "__main__":
+    main()

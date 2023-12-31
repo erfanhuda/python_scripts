@@ -8,6 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600;700;800&display=swap" rel="stylesheet">
     <title>Document</title>
     <link rel="stylesheet" href="css/output.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js" integrity="sha512-v2CJ7UaYy4JwqLDIrZUI/4hqeoQieOmAZNXBeQyjo21dadnwR+8ZaIJVT8EE2iyI61OV8e6M8PP2/4hpQINQ/g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <style>
         /* * {
             border: solid 1px red;
@@ -28,54 +29,6 @@
             <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Nesciunt iure officia qui recusandae totam corrupti labore praesentium libero aspernatur. Adipisci magnam cum consequuntur expedita quidem commodi est laborum eos minima saepe rem, dignissimos, tempora nulla facere! Quisquam, deleniti quam consequuntur voluptatum dolorem nisi obcaecati ipsa perspiciatis magnam voluptas porro cumque.</p>
         </div>
     </div>
-    
-    <script>
-        let wrapper = document.querySelector("#wrapper");
-        let header = wrapper.querySelector("#header");
-
-        ismouseDown= false;
-
-        let offsetX = 0;
-        let offsetY = 0;
-
-        function openWindow() {
-            let state = wrapper.classList.contains("hidden");
-            
-            // console.log(state);
-            if(state){
-
-                wrapper.classList.remove("hidden");
-            } else {
-                wrapper.classList.add("hidden");
-            }
-        }
-
-        header.addEventListener("mousedown", (e) => {
-            ismouseDown = true;
-            offsetX = wrapper.offsetLeft - e.clientX;
-            offsetY = wrapper.offsetTop - e.clientY;
-            console.log(offsetX, offsetY)
-        })
-
-        document.addEventListener("mousemove", (e) => {
-            if(!ismouseDown) return;
-            e.preventDefault();
-            let left = e.clientX + offsetX;
-            let top = e.clientY + offsetY;
-
-            wrapper.classList.remove("left-0");
-            wrapper.classList.remove("top-0");
-            wrapper.classList.remove("right-0");
-            wrapper.classList.remove("bottom-0");
-            wrapper.style.left = left + "px";
-            wrapper.style.top = top + "px";
-        })
-
-        document.addEventListener("mouseup", () => {
-            ismouseDown = false;
-        })
-
-        
-    </script>
+    <script src="js/main.js"></script>
 </body>
 </html>

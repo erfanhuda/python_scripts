@@ -1,0 +1,22 @@
+{
+  "name": "cra-template-erfan",
+  "version": "1.0.0",
+  "description": "Template reactJS by Algobro Inc.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/erfanhuda/cra-template-algobro.git"
+  },
+  "keywords": [
+    "Algobro"
+  ],
+  "author": "Erfan Huda",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/erfanhuda/cra-template-algobro/issues"
+  },
+  "homepage": "https://github.com/erfanhuda/cra-template-algobro#readme"
+}
