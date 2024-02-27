@@ -3,15 +3,9 @@ import pandas as pd
 import glob
 import os
 
-<<<<<<< HEAD:mev_transformation.py
-SOURCE_PATH = "X:/dev/app/python_scripts/file/input/mev/"
-OUTPUT_PATH = "X:/dev/app/python_scripts/file/output/mev/"
-OUTPUT_FILE = "combine_variable2.xlsx"
-=======
 SOURCE_PATH = "C:/Users/muhammad.huda/OneDrive - Seagroup/01. WORK/01. ECL/Remodelling FY 23/Q3/raw data/Up to Sep 2023/MEV/Wrapped/csv/worst"
 OUTPUT_PATH = "C:/Users/muhammad.huda/OneDrive - Seagroup/01. WORK/01. ECL/Remodelling FY 23/Q3/raw data/Up to Sep 2023/MEV/Wrapped/csv/output"
 OUTPUT_FILE = "py_MEV_WORST_transformation_Q3.xlsx"
->>>>>>> b9751c26959621c5541561d01e46b2f182c55f6c:variable_transformation.py
 
 variable_path = glob.glob(os.path.join(SOURCE_PATH, "*.csv"))
 list_df = []

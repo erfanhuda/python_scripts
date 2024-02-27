@@ -1,93 +1,93 @@
+import sys
 from typing import Protocol
 from dataclasses import dataclass
 import requests
 import mysql.connector
 
 # MySQL server configuration
-config = {
+dev_config = {
     'user': 'dev_erfan',
-    'password': 'uX4w&m2cYdSLMK',
+    'password': 'G#e6HtXEJKM',
     'host': '10.162.34.96',
     'port': '6608',
     'database': 'sbid_fin_dm_rep'
 }
 
-try:
-    # Establish a connection to the MySQL server
-    connection = mysql.connector.connect(**config)
+production_config = {
+    'user': 'dev_erfan',
+    'password': 'G#e6HtXEJKM',
+    'host': '10.162.40.159',
+    'port': '10001',
+    'database': ''
+}
 
-    if connection.is_connected():
-        print('Connected to FDM Dev server')
-        cursor = connection.cursor()
-        cursor.execute(
-            "SELECT * FROM sbid_fin_dm_rep.lns_jf_productcode_tenor_daily_vw;")
-
-        print(cursor.fetchall())
-        # Perform further operations if needed
-
-except mysql.connector.Error as error:
-    print(f'Failed to connect to MySQL server: {error}')
-
-finally:
-    # Close the connection
-    if 'connection' in locals():
-        connection.close()
-        print('Connection closed')
+test_config = {
+    'user': 'dev_erfan',
+    'password': 'G#e6HtXEJKM',
+    'host': '10.162.36.231',
+    'port': '6608',
+    'database': ''
+}
 
 
-url = "https://hue1.id.seabank.io/hue/accounts/login"
-headers = {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Cache-Control": "max-age=0",
-    "Content-Length": "134",
-    "Content-Type": "application/x-www-form-urlencoded",
-    "Cookie": "_ga=GA1.2.1710490959.1685329622; _gid=GA1.2.1020773365.1686716511; csrftoken=jIsKD2BEyfz3zxEvHEtA4RsubYRoPIZl1QQ8zQgGzlsNfAYpFTmfbLBNZP7oEVMg; sessionid=jq8p8q1f2zsk2ohsc9kzn78hajikwoqn; _gat=1",
-    "Origin": "https://hue1.id.seabank.io",
-    "Referer": "https://hue1.id.seabank.io/hue/accounts/login?next=/",
-    "Sec-Ch-Ua-Mobile": "0", "Sec-Ch-Ua-Platform": "Windows", "Sec-Fetch-Dest": "document", "Sec-Fetch-Mode": "navigate", "Sec-Fetch-Site": "same-origin", "Sec-Fetch-User": "?1", "Upgrade-Insecure-Requests": "1", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36", }
+def test_connection(query):
+    try:
+        # Establish a connection to the MySQL server
+        connection = mysql.connector.connect(**dev_config)
+
+        if connection.is_connected():
+            print('Connected to FDM Dev server')
+            cursor = connection.cursor()
+            cursor.execute(
+                f"{query}")
+
+            return cursor.fetchall()
+            # Perform further operations if needed
+
+    except mysql.connector.Error as error:
+        print(f'Failed to connect to MySQL server: {error}')
+
+    finally:
+        # Close the connection
+        if 'connection' in locals():
+            connection.close()
+            print('Connection closed')
 
 
-body = {"csrfmiddlewaretoken": "nbhavIR1Lb7Xw5WyETVu9yMcgYjd56ZMg7MohKLzXMmKlTMymhtu3XNw42tqMFUM",
-        "username": "muhammad.huda", "password": "UPj8sksr", "next": "/"}
+def upload_file(filename: str, tablename: str) -> None:
+    try:
+        # Establish a connection to the MySQL server
+        connection = mysql.connector.connect(**dev_config)
 
-login = requests.post(url, data=body, headers=headers)
+        if connection.is_connected():
+            print('Connected to FDM Dev server')
+            cursor = connection.cursor()
+            column = cursor.execute(
+                f"""SELECT COLUMN_NAME FROM information_schema.`COLUMNS` WHERE TABLE_SCHEMA = '{tablename.split(".")[0]}' AND TABLE_NAME = '{tablename.split(".")[1]}';""")
+            columns = ",".join([x[0] for x in column])
+            cursor.execute(
+                f"""LOAD DATA LOCAL INFILE '{filename}' INTO TABLE {tablename} FIELDS TERMINATED BY ',' LINES TERMINATED BY '\r\n' IGNORE 1 LINES ({columns});""")
 
+            return cursor.fetchall()
+            # Perform further operations if needed
 
-@dataclass
-class Connection:
-    host: str
-    port: int
-    username: str
-    password: str
-    database: str
+    except mysql.connector.Error as error:
+        print(f'Failed to connect to MySQL server: {error}')
 
-
-class ConnectionInterface(Protocol):
-    """Interface connection for database connection"""
-    def connect():
-        """CTA for connect to database as choosen"""
-
-    def save():
-        """CTA to save connection in db.ini"""
-
-
-class ImpalaConnection(ConnectionInterface):
-    def connect(self):
-        self.connection = Connection()
-
-    def save(self):
-        with open("db.ini", "w") as f:
-            f.write(self.connection)
+    finally:
+        # Close the connection
+        if 'connection' in locals():
+            connection.close()
+            print('Connection closed')
 
 
-class PostgreSQL(ConnectionInterface):
-    def connect():
-        pass
+if __name__ == '__main__':
+    upload_file(
+        filename="", tablename="sbid_fin_dm_stg.rep_fin_reg_com_master_kredit_ss_d")
 
-    def save():
-        pass
-
-    def log():
-        pass
+    FILE_NAME = ''
+    TABLE_NAME = ''
+    if (FILE_NAME == '') or (TABLE_NAME == ''):
+        upload_file(filename=sys.argv[1], tablename=sys.argv[2])
+    else:
+        upload_file(FILE_NAME, TABLE_NAME)
