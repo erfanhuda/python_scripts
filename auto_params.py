@@ -18,7 +18,6 @@ import itertools
 # SCF : [32]
 # SME : [24]
 
-
 def generate_with_scenario(mode: str, filename: str = None) -> None:
     result = itertools.product(scenario, products, tenor, mob, buckets)
     result = pd.DataFrame(list(result), columns=[
