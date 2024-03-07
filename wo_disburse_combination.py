@@ -11,16 +11,21 @@ logging.info(
     f"Start execution.")
 
 SOURCE_PATH = "C:/Users/muhammad.huda/Downloads/wo_dates.csv"
-OUTPUT_PATH = "C:/Users/muhammad.huda/Downloads/wo_combination.csv"
+OUTPUT_PATH = "C:/Users/muhammad.huda/Downloads/wo_disb_combs.csv"
 
 dates = pd.date_range("2022-01-31", "2023-12-31", freq="m").to_list()
 input_file = [*csv.DictReader(open(SOURCE_PATH, encoding="utf-8-sig"))]
-dates = [{"wo_dates": v.strftime("%Y-%m-%d")} for v in dates]
+wo_dates = [{"wo_dates": v.strftime("%Y-%m-%d")} for v in dates]
+disb_dates = [{"disb_dates": v.strftime("%Y-%m-%d")} for v in dates]
 
 output = []
 for item in input_file:
-    for date in dates:
+    for date in wo_dates:
         item['wo_dates'] = date['wo_dates']
+        output.append(dict(item))
+
+    for date in disb_dates:
+        item['disb_dates'] = date['disb_dates']
         output.append(dict(item))
 
 df = pd.DataFrame(output)
