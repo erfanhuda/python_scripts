@@ -1,4 +1,4 @@
-__app_name__ = "Seacaster"
+__app_name__ = "seacaster"
 __version__ = "0.1.0"
 
 (
