@@ -1,6 +1,16 @@
--- Active: 1686021543930@@203.175.8.110@3306
-
-with mk_wo as (
+set spark.sql.hive.convertMetastoreOrc=true;
+with mk_wo_base as (
+    select A.product_code, A.tenor, A.tenor_in_month, A.payment_freq, A.int_real_rate, A.loan_disbursement_date, A.write_off_principal, A.clawback_interest, A.clawback_principal
+    , B.pt_date
+    ,max(B.day_past_due) over (partition by B.pt_date,B.client_no) as day_past_due_client
+    ,max(B.day_past_due) over (partition by B.pt_date,B.group_client_no) as day_past_due_group_client
+    ,max(B.day_past_due) over (partition by B.pt_date,B.client_no,B.product_type) as day_past_due_product
+    from dm.rep_fin_reg_db_master_kredit_write_off_ss_d A
+    left join dm.rep_fin_reg_com_master_kredit_ss_d B
+    on B.pt_date = add_months(A.written_off_date,-1) and A.loan_no = B.loan_no
+    where (A.written_off_date = A.pt_date) or (A.clawback_date = A.pt_date);
+)
+, mk_wo as (
     select 
     case 
         when product_code='101' then 'SPL' 
@@ -36,7 +46,7 @@ with mk_wo as (
     sum(case when clawback_date = pt_date then clawback_principal
          else 0 end) clawback_principal,
     pt_date
-    from dm.rep_fin_reg_db_master_kredit_write_off_ss_d
+    from mk_wo_base
     where 
     pt_date between '{{start_date}}' and '{{end_date}}'
     -- pt_date = date_add(current_date(), -1)
