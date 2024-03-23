@@ -19,28 +19,29 @@ import itertools
 # SME : [24]
 
 def generate_with_scenario(mode: str, filename: str = None) -> None:
-    result = itertools.product(scenario, products, tenor, mob, buckets)
+    result = itertools.product(products, tenor, payment_freq, flow_rate_matrix)
     result = pd.DataFrame(list(result), columns=[
-        "scenario", "product", "tenor", "period", "bucket"])
+        "product", "tenor", "payment_freq", "matrix"])
 
     result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
 
 
 def generate_without_scenario(mode: str, filename: str = None) -> None:
-    result = itertools.product(products, tenor, mob, buckets)
+    result = itertools.product(products, 0, mob, buckets)
     result = pd.DataFrame(list(result), columns=[
                           "product", "tenor", "period", "bucket"])
 
     result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
 
-
 if __name__ == "__main__":
-    products = ["Digital_KPL"]
+    products = ["Digital_SME"]
     scenario = ['BASE', 'BEST', 'WORST']
-    tenor = range(1, 181)
+    flow_rate_matrix = ['Current - Current', 'Current - M1', 'Current - M2', 'Disburse - Current', 'Disburse - M1', 'Disburse - M2', 'M1 - M2', 'M1 - M3', 'M2 - M3', 'M2 - M4', 'M3 - M4', 'M3 - M5', 'M4 - M5', 'M4 - M6', 'M5 - M6', 'M6 - WO']
+    tenor = range(1,61)
+    payment_freq = [1]
     buckets = range(1, 6)
     mob = range(1, 277)
-    FILENAME = "./file/csv_templates.csv"
+    FILENAME = "./file/csv_templates_flow_rate.csv"
 
     # Mode "a" for append, "w" for new writing
     generate_with_scenario(mode="a", filename=FILENAME)
