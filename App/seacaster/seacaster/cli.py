@@ -8,7 +8,7 @@ from seacaster import ERRORS, __app_name__, __version__, config, database, seaca
 app = typer.Typer()
 
 @app.command()
-def init(
+def init( 
     db_path: str = typer.Option(
         str(database.DEFAULT_DB_FILE_PATH),
         "--db-path",
