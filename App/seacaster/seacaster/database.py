@@ -9,9 +9,11 @@ DEFAULT_DB_FILE_PATH = Path.home().joinpath(
     "." + Path.home().stem + "_todo.json"
 )
 
+
 class DBResponse(NamedTuple):
     todo_list: List[Dict[str, Any]]
     error: int
+
 
 class DatabaseHandler:
     def __init__(self, db_path: Path) -> None:
@@ -35,11 +37,13 @@ class DatabaseHandler:
         except OSError:  # Catch file IO problems
             return DBResponse(todo_list, DB_WRITE_ERROR)
 
+
 def get_database_path(config_file: Path) -> Path:
     """Return the current path to the to-do database."""
     config_parser = configparser.ConfigParser()
     config_parser.read(config_file)
     return Path(config_parser["General"]["database"])
+
 
 def init_database(db_path: Path) -> int:
     """Create the to-do database."""
