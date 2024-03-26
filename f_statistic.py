@@ -41,7 +41,6 @@ logging.basicConfig(level=logging.DEBUG,
 
 """ Handling missing data """
 
-
 def fill_last_value(data):
     return pd.concat(data, axis=1).sort_values('Date').ffill().fillna(0)
 
