@@ -18,8 +18,26 @@ import itertools
 # SCF : [32]
 # SME : [24]
 
+# STARTED DATE
+# SPL 3, 6, 12 : 2021-08-31
+# BCL 2 : 2021-11-30
+# BCL 3 : 2021-12-31
+# BCL 6 : 2022-01-31
+# BCL 12 : 2022-01-31
+# SPL 1 : 2021-12-31
+# EML 60 : 2022-10-31
+# 
+
+
+def generate_cohort_template(mode: str, filename: str = None) -> None:
+    result = itertools.product(date_range, products, tenor, buckets, mob)
+    result = pd.DataFrame(list(result), columns=[
+        "pt_date", "product", "tenor", "ecl_bucket", "period"])
+
+    result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
+
 def generate_with_scenario(mode: str, filename: str = None) -> None:
-    result = itertools.product(products, tenor, payment_freq, flow_rate_matrix)
+    result = itertools.product(date_range, tenor, payment_freq, flow_rate_matrix)
     result = pd.DataFrame(list(result), columns=[
         "product", "tenor", "payment_freq", "matrix"])
 
@@ -29,19 +47,34 @@ def generate_with_scenario(mode: str, filename: str = None) -> None:
 def generate_without_scenario(mode: str, filename: str = None) -> None:
     result = itertools.product(products, 0, mob, buckets)
     result = pd.DataFrame(list(result), columns=[
-                          "product", "tenor", "period", "bucket"])
+                          "pt_date", "product", "tenor", "bucket"])
+
+    result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
+
+def generate_cohort_pd(mode: str, filename: str = None) -> None:
+    result = itertools.product(["2024-02-29"], products, tenor, buckets, mob)
+    result = pd.DataFrame(list(result), columns=[
+                          "pt_date", "product", "tenor", "bucket", "period"])
+
+    result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
+
+def generate_cohort_comparison_model(mode: str, filename: str = None) -> None:
+    result = itertools.product(products, tenor, buckets, models, mob)
+    result = pd.DataFrame(list(result), columns=["product", "tenor", "bucket", "model", "period"])
 
     result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
 
 if __name__ == "__main__":
-    products = ["Digital_SME"]
+    products = ["BCL"]
     scenario = ['BASE', 'BEST', 'WORST']
+    date_range = [x for x in pd.date_range(start="2021-06-30", end="2024-02-29", freq="M").strftime("%Y/%m/%d")]
     flow_rate_matrix = ['Current - Current', 'Current - M1', 'Current - M2', 'Disburse - Current', 'Disburse - M1', 'Disburse - M2', 'M1 - M2', 'M1 - M3', 'M2 - M3', 'M2 - M4', 'M3 - M4', 'M3 - M5', 'M4 - M5', 'M4 - M6', 'M5 - M6', 'M6 - WO']
-    tenor = range(1,61)
+    tenor = [2]
     payment_freq = [1]
     buckets = range(1, 6)
-    mob = range(1, 277)
-    FILENAME = "./file/csv_templates_flow_rate.csv"
+    mob = range(1, 13)
+    models = ['Regional Model', 'SBID Cohort Model', 'SBID TTC YOY Model']
+    FILENAME = "./file/csv_templates_comparison.csv"
 
     # Mode "a" for append, "w" for new writing
-    generate_with_scenario(mode="a", filename=FILENAME)
+    generate_cohort_comparison_model(mode="a", filename=FILENAME)
