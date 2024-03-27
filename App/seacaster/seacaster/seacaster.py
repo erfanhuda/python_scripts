@@ -62,8 +62,3 @@ class Todoer:
         """Remove all to-dos from the database."""
         write = self._db_handler.write_todos([])
         return CurrentToDo({}, write.error)
-
-
-class Statistics:
-    def __init__(self, db_path) -> None:
-        self._db_handler = DatabaseHandler(db_path)
