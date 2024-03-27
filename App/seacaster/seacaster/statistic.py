@@ -45,7 +45,6 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - Seabank Finpro - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
 
-
 df = pd.from_dummies()
 print(df)
 

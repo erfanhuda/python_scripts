@@ -6,5 +6,4 @@ class TransactionTest(unittest.TestCase):
         pass
 
 if __name__ == "__main__":
-    print(transaction.DEFAULT_INPUT_DATA_PATH)
     unittest.main()
