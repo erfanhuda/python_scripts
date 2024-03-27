@@ -25,6 +25,14 @@ import collections
 
 from typing import Any, Callable
 
+test_data = {"datetime":[pd.date_range("2022-01-01","2024-02-01",freq="M")], "odr": [], "gdp": [], "usdidr": []}
+
+print(test_data)
+
+@dataclass
+class _TimeseriesHandler:
+    datetime: list[pd.DatetimeIndex] = pd.date_range("2000-01-01",datetime.datetime.now(), freq="M")
+
 Base = collections.namedtuple("base", ['key', 'type'])
 
 y_variable = Base('y_variable', list)
@@ -37,7 +45,9 @@ warnings.filterwarnings("ignore")
 logging.basicConfig(level=logging.DEBUG,
                     format='%(asctime)s - Seabank Finpro - %(levelname)s - %(message)s', datefmt='%Y/%m/%d %H:%M:%S')
 
-# BASE_CONFIG_FILE = "./file/fl_config.json"
+
+df = pd.from_dummies()
+print(df)
 
 """ Handling missing data """
 
@@ -69,8 +79,6 @@ def add_variances(data, k):
 
 
 """ Handling plots """
-
-
 def generate_plots(data):
     fig, ax = plt.subplots(nrows=6)
     data['CPI'].plot(ax=ax[0], title=data['CPI'].name, color="green")
@@ -85,7 +93,6 @@ def generate_plots(data):
 
 
 """ Handling ODR transformation"""
-
 
 def transform_zscore(odrs):
     """ Z-Score for list of ODRS"""
@@ -1794,31 +1801,3 @@ class App:
             config = XMLFile(self._f)
             logging.info(config.read_keys())
             self.mainloop()
-
-# def main():
-#     """ Lies the start time script running"""
-#     start_time = datetime.datetime.now()
-#     logging.info("Script running on {}".format(start_time))
-
-#     """ Lies the argparse to get param in cmd line """
-#     parser = argparse.ArgumentParser()
-#     parser.add_argument("--file", type=str, default=None)
-#     arg = parser.parse_args()
-
-#     """ Lies the main runner program """
-#     app = App()
-
-#     if arg.file is None:
-#         app.set_file = "./file/config.json"
-#     else:
-#         app.set_file = arg.file
-
-#     app.run()
-
-#     """ Lies the end time script running"""
-#     end_time = datetime.datetime.now()
-#     logging.info("Script finished on {}".format(end_time))
-#     logging.info("Script running about {}".format(end_time - start_time))
-
-# if __name__ == "__main__":
-#     main()
