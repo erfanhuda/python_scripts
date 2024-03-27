@@ -1,10 +1,12 @@
 from pathlib import Path
 from algobro import SUCCESS, DB_WRITE_ERROR
+import os
 
 DEFAULT_DATA_PATH = Path.home().joinpath(
     "." + Path.home().stem + "_record.json"
 )
 
+DATA_DIR = os.path.dirname(__file__)
 
 class RecordHandler:
     def __init__(self, db_path: Path) -> None:
