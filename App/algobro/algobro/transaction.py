@@ -4,6 +4,14 @@ from datetime import datetime
 
 DEFAULT_INPUT_DATA_PATH = Path.home().joinpath("." + Path.home().stem + "\data")
 
+(
+    ASSET,
+    LIABILITY,
+    EQUITY,
+    INCOME,
+    EXPENSE
+) = range(5)
+
 @dataclass
 class Ledger:
     _parent: str
@@ -15,13 +23,11 @@ class Record:
     _description: str
     _ledger: Ledger
 
-
 @dataclass
 class Budget:
     _name: str
     description: str
     records: list[dict]
-
 
 @dataclass
 class Transaction:
