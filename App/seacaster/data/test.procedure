@@ -1,0 +1,31 @@
+input:y_var "MEV_.csv"
+input:x_var "ODR_.csv"
+output:dir "./output/"
+
+x_var:GDP
+add_calculate::growth
+output:file "gdp_growth.csv"
+
+x_var:all
+add:transformation:lag:1M "_lag_1"
+add:transformation:lag:2M "_lag_2"
+add:transformation:lag:3M "_lag_3"
+add:transformation:lag:4M "_lag_4"
+add:transformation:delta:1M "_delta_mom"
+add:transformation:delta:3M "_delta_qoq"
+add:transformation:delta:6M "_delta_hoh"
+add:transformation:delta:12M "_delta_yoy"
+output:file "mev_transformation.csv"
+
+y_var:all
+add:transformation:z_score zscore
+
+arima:X_var:all
+r_square:0.7 
+p:10
+d:20
+q:10
+output:file "forecast_arima.csv"
+
+ols_test:X_var:all, Y_var:ODR
+output:file "ols_test_result.csv"
