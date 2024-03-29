@@ -1,6 +1,12 @@
 import os
+import glob
+from pathlib import Path
 
 CURRENT_DIR = os.path.dirname(__file__)
+DEFAULT_DIR = os.path.dirname("first_id")
 
-with open(CURRENT_DIR + "\\2023-12.transaction") as w:
-    print(w.read())
+filename = input("Filename : ")
+ext = input("Extension : ")
+f = open(".".join([filename, ext]), "a")
+f.write(f"[{DEFAULT_DIR}]")
+f.close()
