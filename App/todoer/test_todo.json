@@ -1,0 +1,22 @@
+[
+    {
+        "Description": "Wash Smoot motor.",
+        "Priority": 1,
+        "Done": false
+    },
+    {
+        "Description": "Find local supply lumber in Bogor.",
+        "Priority": 1,
+        "Done": false
+    },
+    {
+        "Description": "Find local supply foam.",
+        "Priority": 1,
+        "Done": false
+    },
+    {
+        "Description": "Buka Puasa.",
+        "Priority": 1,
+        "Done": false
+    }
+]
