@@ -6,7 +6,7 @@ from dwd.t05_pl_loan_accounting_status_change_evt_ss_d
 where pt_date='{{dt}}' 
 and accounting_status_code ='NON_PERFORMING'
 and accounting_date <='{{dt}}'
-group by loan_no,client_no) 
+group by loan_no,client_no)
 
 ,default_info_cif as 
     (select client_no
