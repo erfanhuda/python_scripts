@@ -1,0 +1,63 @@
+2024-03-23 Makan buka puasa
+Budg:Monthly
+Expense:Meal:Es teler IDR18,000
+Expense:Meal:Nasi padang IDR22,000
+Expense:Meal:Bakpao IDR6,000
+Expense:Coffee IDR 35,000
+Cash:QRIS
+
+2024-03-24 Beli Baju
+Loc:Wellen’s Project
+Budget:Monthly
+Expense:Baju 3PCS@48,000
+Expense:Hoodie 1PCS@86,000
+Cash:QRIS
+
+Budget:Setup Personal Use
+Expense:Erfan Huda:Monthly IDR2,400,000
+Expense:Rent:Listrik&APL Apt IDR600,000
+Expense:Rent:Listrik&Air Ngaliyan IDR500,000
+Expense:Entertain:Coffee 20Cup@18,000
+Expense:Entertain:Cigarette 20Pack@30,000
+Bank:Tabungan Alfa IDR1,000,000
+Expense:Family IDR 3,000,000
+
+2024-03-24 Oleh-oleh Mama Astuti
+Expense:Meal IDR78,000
+Cash:QRIS
+
+2024-03-24 Buka Puasa
+Expense:Meal:Aqua & Coklat IDR17,000
+Expense:Meal:Padang Uni Merah IDR47,000
+Cash:QRIS
+
+2024-03-24 Kirim paket kue marvel
+Expense:Business:Delivery IDR152,000
+
+2024-03-25 Gajian
+Income:Salary IDR13,981,561
+Payable:Indodana -IDR6,335,000
+Cash:Transfer
+
+2024-03-25 Buka Puasa
+Expense:Meal IDR28,000
+Expense:Meal Nasi Bebek IDR18,000
+Expense:Meal Roti Bakar IDR42,000
+Expense:Coffee IDR36,000
+Expense:Park IDR5,000
+
+2024-03-26 Daily
+Expense:Meal IDR13,000
+Expense:Parking IDR20,000
+Expense:Coffee IDR18,000
+Expense:Meal Bakso IDR20,000
+Expense:Cigarette IDR29,500
+
+2024-03-27 Daily
+Expense:Meal:Takjil IDR9,000
+Expense:Meal IDR45,000
+Expense:Parking IDR22,000
+
+2024-03-28 Daily
+Expense:Coffee IDR18,000
+Expense:Parking IDR5,000
