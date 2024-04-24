@@ -8,10 +8,6 @@ DEFAULT_DATA_PATH = Path.home().joinpath(
     "." + Path.home().stem
 )
 
-def _default_path():
-    date = datetime.datetime.now()
-    return {"datetime": DEFAULT_DATA_PATH + date.year + date.month + ".record"}
-
 DATA_DIR = os.path.dirname(__file__)
 
 class RecordHandler:
