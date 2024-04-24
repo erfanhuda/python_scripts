@@ -31,16 +31,19 @@ from typing_extensions import Self, TypeAlias
 # SPL 1 : 2021-12-31
 # EML 60 : 2022-10-31
 
-max_days = (x for x in range(0, 548233))
+class Products:
+    def __init__(self):
+        ...
 
 class AutoParams:
-    """Create autoparams class"""
+    """Autoparams infer the parameter list for each data types"""
     def __init__(self, columns: Optional[list] = [], data: Optional[list] = []):
         self._mode = None
         self._filename = None
         self._columns = columns
         self._data = data
         self._result = []
+        self._config = {"products": "", }
 
         if len(columns) != len(data):
             raise ValueError
@@ -98,19 +101,29 @@ class AutoParams:
 #     result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
 
 if __name__ == "__main__":
-    products = ["BCL"]
+    ch_segments = ["Channeling"]
+    ch_products = ["AKL", "APL", "EAL", "RCL", "KPL"]
+    ddl_segments = ["DDL"]
+    ddl_products = ["EML", "PYL", "SME", "SCF", "UDL"]
+    non_tenor_product = ["EML", "PYL", "KPL", "SME", "SCF", "UDL"]
+    tenor_product = ["AKL", "APL", "EAL", "RCL", "KPL"]
+    product = ["APL"]
+
     scenario = ['BASE', 'BEST', 'WORST']
     # date_range = [x for x in pd.date_range(start="2021-06-30", end="2024-02-29", freq="M").strftime("%Y/%m/%d")]
     flow_rate_matrix = ['Current - Current', 'Current - M1', 'Current - M2', 'Disburse - Current', 'Disburse - M1', 'Disburse - M2', 'M1 - M2', 'M1 - M3', 'M2 - M3', 'M2 - M4', 'M3 - M4', 'M3 - M5', 'M4 - M5', 'M4 - M6', 'M5 - M6', 'M6 - WO']
-    tenor = [2]
+    tenor = [""]
     payment_freq = [1]
     buckets = range(1, 6)
     mob = range(1, 13)
     models = ['Regional Model', 'SBID Cohort Model', 'SBID TTC YOY Model']
-    FILENAME = "./file/csv_templates_comparison_test.csv"
+    FILENAME = "./file/pivot_channeling/csv_templates_channeling_pivot_tenor.csv"
 
     # Mode "a" for append, "w" for new writing
     # generate_cohort_comparison_model(mode="a", filename=FILENAME)
+    final = itertools.product(ch_segments, non_tenor_product, tenor)
+    final = pd.DataFrame(list(final), columns=["Segments", "Products", "Tenor"])
+    final.to_csv(mode="a", path_or_buf=FILENAME, index=False, header=False)
 
     # cohort_comparison_model = AutoParams(["Products", "Scenario"], [products, scenario])
     # cohort_comparison_model.export_to_csv(mode="a", filename=FILENAME)
