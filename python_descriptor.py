@@ -114,7 +114,6 @@ class ModelValidator(ABC):
     def __set__(self, obj, value):
         logging.info("U")
 
-
 class Person:
     age = LoggedAccess() # Descriptor instance
     name = LoggedAccess()

@@ -1,5 +1,9 @@
 import pandas as pd
 import itertools
+from typing import Optional
+from collections.abc import Iterable, Iterator
+from typing import overload
+from typing_extensions import Self, TypeAlias
 
 # date = [ x for x in pd.date_range(start="2021-07-31", end="2023-06-30", freq="M").strftime("%Y/%m/%d")]
 
@@ -26,43 +30,69 @@ import itertools
 # BCL 12 : 2022-01-31
 # SPL 1 : 2021-12-31
 # EML 60 : 2022-10-31
-# 
 
+class AutoParams:
+    """Create autoparams class"""
+    def __init__(self, columns: Optional[list] = [], data: Optional[list] = []):
+        self._mode = None
+        self._filename = None
+        self._columns = columns
+        self._data = data
+        self._result = []
 
-def generate_cohort_template(mode: str, filename: str = None) -> None:
-    result = itertools.product(date_range, products, tenor, buckets, mob)
-    result = pd.DataFrame(list(result), columns=[
-        "pt_date", "product", "tenor", "ecl_bucket", "period"])
+        if len(columns) != len(data):
+            raise ValueError
 
-    result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
+    def remove_default_number(self, col:list, default_number: Optional[int] = 1) -> None:
+        if default_number == 0:
+            self._columns.append(col)
 
-def generate_with_scenario(mode: str, filename: str = None) -> None:
-    result = itertools.product(date_range, tenor, payment_freq, flow_rate_matrix)
-    result = pd.DataFrame(list(result), columns=[
-        "product", "tenor", "payment_freq", "matrix"])
+    def set(self, name: str, data: list) -> None:
+        self._columns.append(name)
 
-    result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
+    def run(self):
+        data = itertools.product(*self._data)
+        self._result = list(data)
+    
+    def export_to_csv(self, mode, filename):
+        self.run()
 
+        result = pd.DataFrame(list(self._result), columns=[x for x in self._columns])
+        result.to_csv(mode=mode, path_or_buf=filename, index=False, header=False)
 
-def generate_without_scenario(mode: str, filename: str = None) -> None:
-    result = itertools.product(products, 0, mob, buckets)
-    result = pd.DataFrame(list(result), columns=[
-                          "pt_date", "product", "tenor", "bucket"])
+# def generate_cohort_template(mode: str, filename: str = None) -> None:
+#     result = itertools.product(date_range, products, tenor, buckets, mob)
+#     result = pd.DataFrame(list(result), columns=[
+#         "pt_date", "product", "tenor", "ecl_bucket", "period"])
 
-    result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
+#     result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
 
-def generate_cohort_pd(mode: str, filename: str = None) -> None:
-    result = itertools.product(["2024-02-29"], products, tenor, buckets, mob)
-    result = pd.DataFrame(list(result), columns=[
-                          "pt_date", "product", "tenor", "bucket", "period"])
+# def generate_with_scenario(mode: str, filename: str = None) -> None:
+#     result = itertools.product(date_range, tenor, payment_freq, flow_rate_matrix)
+#     result = pd.DataFrame(list(result), columns=[
+#         "product", "tenor", "payment_freq", "matrix"])
 
-    result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
+#     result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
 
-def generate_cohort_comparison_model(mode: str, filename: str = None) -> None:
-    result = itertools.product(products, tenor, buckets, models, mob)
-    result = pd.DataFrame(list(result), columns=["product", "tenor", "bucket", "model", "period"])
+# def generate_without_scenario(mode: str, filename: str = None) -> None:
+#     result = itertools.product(products, 0, mob, buckets)
+#     result = pd.DataFrame(list(result), columns=[
+#                           "pt_date", "product", "tenor", "bucket"])
 
-    result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
+#     result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
+
+# def generate_cohort_pd(mode: str, filename: str = None) -> None:
+#     result = itertools.product(["2024-02-29"], products, tenor, buckets, mob)
+#     result = pd.DataFrame(list(result), columns=[
+#                           "pt_date", "product", "tenor", "bucket", "period"])
+
+#     result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
+
+# def generate_cohort_comparison_model(mode: str, filename: str = None) -> None:
+#     result = itertools.product(products, tenor, buckets, models, mob)
+#     result = pd.DataFrame(list(result), columns=["product", "tenor", "bucket", "model", "period"])
+
+#     result.to_csv(path_or_buf=filename, mode=mode, index=False, header=False)
 
 if __name__ == "__main__":
     products = ["BCL"]
@@ -74,7 +104,10 @@ if __name__ == "__main__":
     buckets = range(1, 6)
     mob = range(1, 13)
     models = ['Regional Model', 'SBID Cohort Model', 'SBID TTC YOY Model']
-    FILENAME = "./file/csv_templates_comparison.csv"
+    FILENAME = "./file/csv_templates_comparison_test.csv"
 
     # Mode "a" for append, "w" for new writing
-    generate_cohort_comparison_model(mode="a", filename=FILENAME)
+    # generate_cohort_comparison_model(mode="a", filename=FILENAME)
+
+    cohort_comparison_model = AutoParams(["Products", "Scenario"], [products, scenario])
+    cohort_comparison_model.export_to_csv(mode="a", filename=FILENAME)
