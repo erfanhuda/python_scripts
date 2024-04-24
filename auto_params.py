@@ -4,6 +4,8 @@ from typing import Optional
 from collections.abc import Iterable, Iterator
 from typing import overload
 from typing_extensions import Self, TypeAlias
+from abc import ABC
+import json
 
 # date = [ x for x in pd.date_range(start="2021-07-31", end="2023-06-30", freq="M").strftime("%Y/%m/%d")]
 
@@ -31,9 +33,41 @@ from typing_extensions import Self, TypeAlias
 # SPL 1 : 2021-12-31
 # EML 60 : 2022-10-31
 
-class Products:
-    def __init__(self):
-        ...
+# _Pr: str
+# _Sg: str
+# _Te: list[int] = []
+# _Bu: tuple[int]
+# _Mo: tuple[int]
+
+class _L:
+    def __init__(self, name="", *args):
+        self._name = name
+        self._value = args[0]
+
+    def to_json(self):
+        return self.__dict__
+
+class _H:
+    def __init__(self, name="", *args):
+        self._name = name
+        self._value = args[0]
+        self.children = []
+
+    def add(self, child):
+        self.children.append(child)
+
+    def remove(self, child):
+        self.children.remove(child)
+
+    def to_json(self):
+        # print(json.dumps({self._name: self._value}, indent=1))
+        result = {self._name: self._value, "detail": [k.to_json() for k in self.children]}
+        # for child in self.children:
+        #     # json.dump("\t", end="")
+        #     result.append(child.to_json())
+
+        return result
+
 
 class AutoParams:
     """Autoparams infer the parameter list for each data types"""
@@ -121,9 +155,21 @@ if __name__ == "__main__":
 
     # Mode "a" for append, "w" for new writing
     # generate_cohort_comparison_model(mode="a", filename=FILENAME)
-    final = itertools.product(ch_segments, non_tenor_product, tenor)
-    final = pd.DataFrame(list(final), columns=["Segments", "Products", "Tenor"])
-    final.to_csv(mode="a", path_or_buf=FILENAME, index=False, header=False)
+    # final = itertools.product(ch_segments, non_tenor_product, tenor)
+    # final = pd.DataFrame(list(final), columns=["Segments", "Products", "Tenor"])
+    # final.to_csv(mode="a", path_or_buf=FILENAME, index=False, header=False)
 
     # cohort_comparison_model = AutoParams(["Products", "Scenario"], [products, scenario])
     # cohort_comparison_model.export_to_csv(mode="a", filename=FILENAME)
+
+    AKL = _H("Product", "AKL")
+    Tenor1 = _H("Tenor", "1M")
+    Pay1 = _H("Payment Freq", "1")
+    Date1 = _L("Date Start", "2024-03-31")
+    Pay2 = _L("Payment Freq","2")
+
+    Pay1.add(Date1)
+    Tenor1.add(Pay1)
+    Tenor1.add(Pay2)
+    AKL.add(Tenor1)
+    print(json.dumps(AKL.to_json(), indent=3))
