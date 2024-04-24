@@ -4,11 +4,13 @@ import os
 import datetime
 from typing import Optional
 
+
 DEFAULT_DATA_PATH = Path.home().joinpath(
     "." + Path.home().stem
 )
 DATA_DIR = os.path.dirname(__file__)
 
+DATA_DIR = os.path.dirname(__file__)
 def _default_path():
     date = datetime.datetime.now()
     return {"datetime": DEFAULT_DATA_PATH + date.year + date.month + ".record"}
