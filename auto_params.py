@@ -31,6 +31,8 @@ from typing_extensions import Self, TypeAlias
 # SPL 1 : 2021-12-31
 # EML 60 : 2022-10-31
 
+max_days = (x for x in range(0, 548233))
+
 class AutoParams:
     """Create autoparams class"""
     def __init__(self, columns: Optional[list] = [], data: Optional[list] = []):
@@ -59,6 +61,7 @@ class AutoParams:
 
         result = pd.DataFrame(list(self._result), columns=[x for x in self._columns])
         result.to_csv(mode=mode, path_or_buf=filename, index=False, header=False)
+
 
 # def generate_cohort_template(mode: str, filename: str = None) -> None:
 #     result = itertools.product(date_range, products, tenor, buckets, mob)
@@ -97,7 +100,7 @@ class AutoParams:
 if __name__ == "__main__":
     products = ["BCL"]
     scenario = ['BASE', 'BEST', 'WORST']
-    date_range = [x for x in pd.date_range(start="2021-06-30", end="2024-02-29", freq="M").strftime("%Y/%m/%d")]
+    # date_range = [x for x in pd.date_range(start="2021-06-30", end="2024-02-29", freq="M").strftime("%Y/%m/%d")]
     flow_rate_matrix = ['Current - Current', 'Current - M1', 'Current - M2', 'Disburse - Current', 'Disburse - M1', 'Disburse - M2', 'M1 - M2', 'M1 - M3', 'M2 - M3', 'M2 - M4', 'M3 - M4', 'M3 - M5', 'M4 - M5', 'M4 - M6', 'M5 - M6', 'M6 - WO']
     tenor = [2]
     payment_freq = [1]
@@ -109,5 +112,5 @@ if __name__ == "__main__":
     # Mode "a" for append, "w" for new writing
     # generate_cohort_comparison_model(mode="a", filename=FILENAME)
 
-    cohort_comparison_model = AutoParams(["Products", "Scenario"], [products, scenario])
-    cohort_comparison_model.export_to_csv(mode="a", filename=FILENAME)
+    # cohort_comparison_model = AutoParams(["Products", "Scenario"], [products, scenario])
+    # cohort_comparison_model.export_to_csv(mode="a", filename=FILENAME)
