@@ -86,6 +86,22 @@ PAYMENT_FREQ = {
     "SCF" : [1],
     "SME" : [24]}
 
+BEGINNING_DATE = {
+    "SPL" : "2021-10-31",
+    "BCL" : "2021-11-30",
+    "SCL" : "2022-05-31",
+    "KPL" : "",
+    "EML" : "",
+    "RCL" : "",
+    "AKL" : "",
+    "EAL" : "",
+    "PYL" : "",
+    "UDL" : "",
+    "APL" : "",
+    "SCF" : "",
+    "SME" : ""
+}
+
 class _L:
     def __init__(self, name="", *args):
         self._name = name
@@ -185,7 +201,7 @@ if __name__ == "__main__":
     tenor_product = ["AKL", "APL", "EAL", "RCL"]
     product_code = ["106","107","108","109","110","111","112","115","C01","SC1","SC2","M05"]
 
-    product = "UDL"
+    product = "SPL"
     scenario = ['BASE', 'BEST', 'WORST']
     # date_range = [x for x in pd.date_range(start="2021-06-30", end="2024-02-29", freq="M").strftime("%Y/%m/%d")]
     flow_rate_matrix = ['Current - Current', 'Current - M1', 'Current - M2', 'Disburse - Current', 'Disburse - M1', 'Disburse - M2', 'M1 - M2', 'M1 - M3', 'M2 - M3', 'M2 - M4', 'M3 - M4', 'M3 - M5', 'M4 - M5', 'M4 - M6', 'M5 - M6', 'M6 - WO']
@@ -194,12 +210,13 @@ if __name__ == "__main__":
     buckets = range(1, 6)
     stage = range(1, 4)
     mob = range(1, 13)
+    date_range = pd.date_range(BEGINNING_DATE[product],"2024-04-30", freq="m", ).to_list()
     models = ['Regional Model', 'SBID Cohort Model', 'SBID TTC YOY Model']
-    FILENAME = "./file/pivot_channeling/csv_templates_channeling_pivot_buckets_tenor.csv"
+    FILENAME = "./file/template/csv_ecl_disbursement_wo.csv"
     TYPE = "ADD"
 
-    final = itertools.product([SEGMENTS[product]], [product], PRODUCT_CODE[product],TENORS[product] ,buckets)
-    final = pd.DataFrame(list(final), columns=["Segments", "Product", "Code", "Tenor", "Bucket"])
+    final = itertools.product(["2024-04-30"], [product], TENORS[product], date_range)
+    final = pd.DataFrame(list(final), columns=["Pt_date", "Product","Tenor", "Date"])
 
     if TYPE == "NEW":
         final.to_csv(mode="w", path_or_buf=FILENAME, index=False, header=True)
