@@ -1,0 +1,3 @@
+Screen > ModelTable {
+    height: 5h;
+}
