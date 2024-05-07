@@ -2,6 +2,8 @@ from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Label, DirectoryTree,  Input, DataTable, Static, Button, TextArea,TabbedContent, Tabs, TabPane
 from textual.containers import Container, Vertical, Horizontal, HorizontalScroll, VerticalScroll
 from textual.screen import Screen
+from textual import on
+from textual.message import Message
 
 class FileScreen(VerticalScroll):
     def compose(self) -> ComposeResult:
@@ -68,6 +70,42 @@ class ModelTable(Vertical):
     def compose(self) -> ComposeResult:
         yield self._test_dt()
 
+class TabScreen(Container):
+    def compose(self):
+        """Create child widgets for the app."""
+        with TabbedContent("Models", initial="io"):
+            with TabPane("IO", id="io"):
+                yield Input()
+            with TabPane("Models", id="Models"):
+                yield Button(id="run", label="Run")
+                yield ModelTable("Model")
+
+    @on(Input.Submitted)
+    def action_input_submit(self):
+        input = self.query_one(Input)
+        text = input.value
+        self.mount(Label(text))
+        self.post_message(text)
+        input.value = ''
+
+class LogScreen(Container):
+    def compose(self):
+        with TabbedContent("Log", initial="log"):
+            with TabPane("log", id="log"):
+                yield TextArea(disabled=True)
+            with TabPane("output", id="output"):
+                yield TextArea(disabled=True)
+
+    def action_input_submit(self, message: Message):
+        input = self.query_one(Input)
+        text = input.value
+        self.mount(Label(text))
+        input.value = ''
+
+class SecondScreen(Container):
+    def compose(self):
+        yield TabScreen()
+        yield LogScreen()
 
 
 class Main(App):
@@ -78,20 +116,12 @@ class Main(App):
     # CSS_PATH = "./main.tcss"'
 
     def compose(self) -> ComposeResult:
-        """Create child widgets for the app."""
-        with TabbedContent("Models", initial="io"):
-            with TabPane("IO", id="io"):
-                yield Input()
-            with TabPane("Models", id="Models"):
-                yield Button(id="run", label="Run")
-                yield ModelTable("Model")
+        yield SecondScreen()
+        yield LogScreen()
 
-        # with TabbedContent("Log", initial="log"):
-        #     with TabPane("log", id="log"):
-        #         yield TextArea(disabled=True)
-        #     with TabPane("output", id="output"):
-        #         yield TextArea(disabled=True)
-
+    def on_tab_screen_input_submit(self):
+        ...
+        
     def action_toggle_dark(self) -> None:
         """An action to toggle dark mode."""
         self.dark = not self.dark
