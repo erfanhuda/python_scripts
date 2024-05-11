@@ -8,6 +8,15 @@ from textual.reactive import reactive
 
 from time import monotonic, time
 
+
+def make_label_container(  # (11)!
+    text: str, id: str, border_title: str, border_subtitle: str
+) -> Container:
+    lbl = Label(text, id=id)
+    lbl.border_title = border_title
+    lbl.border_subtitle = border_subtitle
+    return Container(lbl)
+
 class CalendarDisplay(Static):
     start_time = reactive(time)
     time = reactive(monotonic)
