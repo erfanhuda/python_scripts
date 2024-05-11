@@ -155,7 +155,7 @@ class Main(App):
 
     BINDINGS = [("d", "toggle_dark", "Toggle dark mode")]
     TITLE = "Seabank Seacaster"
-    # CSS_PATH = "./main.tcss"'
+    CSS_PATH = "./main.tcss"'
 
     def compose(self) -> ComposeResult:
         yield SecondScreen()
