@@ -170,4 +170,4 @@ class Main(App):
 
 if __name__ == "__main__":
     app = Main()
-    app.run()
+    app.run(css_file="./main.tcss", watch_css=True)
