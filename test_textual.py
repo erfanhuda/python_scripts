@@ -1,5 +1,5 @@
 from textual.app import App, ComposeResult
-from textual.widgets import Header, Footer, Label, DirectoryTree,  Input, DataTable, Static, Button, TextArea,TabbedContent, Tabs, TabPane
+from textual.widgets import Header, Footer, Label, DirectoryTree,  Input, DataTable, Static, Button, TextArea,TabbedContent, Tabs, TabPane, Widget
 from textual.containers import Container, Vertical, Horizontal, HorizontalScroll, VerticalScroll
 from textual.screen import Screen
 from textual import on
@@ -16,6 +16,19 @@ def make_label_container(  # (11)!
     lbl.border_title = border_title
     lbl.border_subtitle = border_subtitle
     return Container(lbl)
+
+
+class LayoutScreen(Screen):
+    def compose(self) -> ComposeResult:
+        yield Widget()
+        yield Widget()
+        yield Widget()
+
+    def on_load():
+        self.bind("tab", "toogle_class('#sidebar', '-active')"
+
+    def on_mount(self):
+        self.mount(header=Widget(),content=Widget(), footer=Widget(), sidebar=Widget())
 
 class CalendarDisplay(Static):
     start_time = reactive(time)
