@@ -8,6 +8,7 @@ App > View {
     width: 30;
     background: blue;
     offset-x: -100%;
+    transition: offset 300ms in_out_cubic;
 }
 
 #sidebar.-active { 
@@ -15,14 +16,37 @@ App > View {
 }
 
 #header {
-
+    border: round green;
+    padding: 4 8;
+    border-title-color: green;
 }
 
-#content {
-    background: cyan;
+FirstContainer {
+    margin: 1;
+    background: $boost;
+    padding: 2;
 }
 
-#footer {
+#input-container {
+    layout: vertical;
+    margin: 0;
+}
 
-    background: magenta;
+PairInput {
+    layout: horizontal;
+}
+
+PairInput > Input {
+    margin: 1;
+    height: auto;
+    border: none;
+    padding: 1;
+}
+
+PairInput > #key {
+    width: 30%;
+}
+
+PairInput > #value {
+    width: 70%;
 }

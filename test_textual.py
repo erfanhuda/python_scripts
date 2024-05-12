@@ -1,9 +1,52 @@
 from textual.app import App, ComposeResult
 from textual.widgets import Header, Footer, Label, DirectoryTree,  Input, DataTable, Static, Button, TextArea,TabbedContent, Tabs, TabPane
+from textual.widget import Widget
 from textual.containers import Container, Vertical, Horizontal, HorizontalScroll, VerticalScroll, ScrollableContainer
 from textual.screen import Screen
 from textual import on
 from textual.message import Message
+from textual.reactive import reactive
+
+from time import monotonic, time
+
+
+def make_label_container(  # (11)!
+    text: str, id: str, border_title: str, border_subtitle: str
+) -> Container:
+    lbl = Label(text, id=id)
+    lbl.border_title = border_title
+    lbl.border_subtitle = border_subtitle
+    return Container(lbl)
+
+
+class LayoutScreen(Screen):
+    def compose(self) -> ComposeResult:
+        yield Widget()
+        yield Widget()
+        yield Widget()
+
+    def on_load():
+        self.bind("tab", "toogle_class('#sidebar', '-active')")
+
+    def on_mount(self):
+        self.mount(header=Widget(),content=Widget(), footer=Widget(), sidebar=Widget())
+
+class CalendarDisplay(Static):
+    start_time = reactive(time)
+    time = reactive(monotonic)
+    
+    def on_mount(self):
+        self.set_interval(1/60, self.update_time)
+        
+    def update_time(self) -> None:
+        """Method to update the time to the current time."""
+        self.time = monotonic() - self.start_time
+
+    def watch_time(self, time: float) -> None:
+        """Called when the time attribute changes."""
+        minutes, seconds = divmod(time, 60)
+        hours, minutes = divmod(minutes, 60)
+        self.update(f"{hours:02,.0f}:{minutes:02.0f}:{seconds:05.0f}")
 
 class FileScreen(VerticalScroll):
     def compose(self) -> ComposeResult:
@@ -137,7 +180,7 @@ class Main(App):
 
     BINDINGS = [("d", "toggle_dark", "Toggle dark mode")]
     TITLE = "Seabank Seacaster"
-    # CSS_PATH = "./main.tcss"'
+    CSS_PATH = "./main.tcss"'
 
     def compose(self) -> ComposeResult:
         yield TabScreen()
@@ -152,4 +195,4 @@ class Main(App):
 
 if __name__ == "__main__":
     app = Main()
-    app.run()
+    app.run(css_file="./main.tcss", watch_css=True)

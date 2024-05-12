@@ -11,3 +11,30 @@ Label {
     border-subtitle-background: yellow;
     border-subtitle-style: italic;
 }
+
+App > View {
+    docks : side=left /1;
+}
+
+#sidebar {
+    dock: side;
+offset-x: -100%;
+width:30;
+transition: offset 500ms in_out_cubic;
+}
+
+#sidebar.-active {
+    offset-x: 0;
+}
+
+#header {
+    
+}
+
+#contents {
+
+}
+
+#footer {
+
+}
