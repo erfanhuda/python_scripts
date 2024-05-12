@@ -1,0 +1,28 @@
+App > View {
+    layer: below;
+}
+
+#sidebar {
+    dock: left;
+    layer: above;
+    width: 30;
+    background: blue;
+    offset-x: -100%;
+}
+
+#sidebar.-active { 
+    offset-x: 0%;
+}
+
+#header {
+
+}
+
+#content {
+    background: cyan;
+}
+
+#footer {
+
+    background: magenta;
+}
