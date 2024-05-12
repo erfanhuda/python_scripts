@@ -4,6 +4,7 @@ from textual.containers import Container, Vertical, Horizontal, HorizontalScroll
 from textual.screen import Screen
 from textual import on
 from textual.message import Message
+import textual
 
 class FileScreen(VerticalScroll):
     def compose(self) -> ComposeResult:
@@ -70,12 +71,25 @@ class ModelTable(Vertical):
     def compose(self) -> ComposeResult:
         yield self._test_dt()
 
+class IOPane(TabPane):
+    def __init__(self, title, id):
+        super().__init__(self)
+        self.title = title
+        self.children = []
+        self.id = id
+
+    def append(self, widget):
+        self.children.append(widget)
 class TabScreen(Container):
     def compose(self):
         """Create child widgets for the app."""
+
+        first_pane = IOPane(title="IO", id="io",)
+        
         with TabbedContent("Models", initial="io"):
-            with TabPane("IO", id="io"):
-                yield Input()
+            yield first_pane
+            # with TabPane("IO", id="io"):
+            #     yield first_pane
             with TabPane("Models", id="Models"):
                 yield Button(id="run", label="Run")
                 yield ModelTable("Model")
@@ -117,11 +131,10 @@ class Main(App):
 
     def compose(self) -> ComposeResult:
         yield SecondScreen()
-        yield LogScreen()
 
     def on_tab_screen_input_submit(self):
         ...
-        
+
     def action_toggle_dark(self) -> None:
         """An action to toggle dark mode."""
         self.dark = not self.dark
