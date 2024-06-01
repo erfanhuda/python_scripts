@@ -4,7 +4,23 @@ import psycopg2.sql as sql
 import random
 import json
 from decimal import Decimal as D
+import urllib3
+from io import BytesIO
+import http.client
 
+
+class ByteIOSocket:
+    def __init__(self, data):
+        self.handle = BytesIO(data)
+
+    def makefile(self, mode):
+        return self.handle
+
+def response_from_byte(data):
+    sock = ByteIOSocket(data)
+    response = http.client.HTTPResponse(sock)
+
+    return response
 
 class BaseEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -36,32 +52,14 @@ def convert_to_json(data):
     js_data = json.dumps(data, use_decimal=True)
     return js_data
 
+import socket
 
-pd_mapping = sql.SQL("select * from public.bv_ecl_mapping_pd")
-lgd_mapping = sql.SQL("select * from public.bv_ecl_mapping_lgd")
+if __name__ == "__main__":
+    import json
 
-get_json = BaseEncoder()
+    conn = http.client.HTTPConnection('10.23.168.74', 8080)
 
-eel.init('web')                     # Give folder containing web files
+    conn.request('GET', '/')
 
-
-@eel.expose
-def py_random():
-    return random.random()
-
-
-@eel.expose                         # Expose this function to Javascript
-def say_hello_py(x):
-    print('Hello from %s' % x)
-
-
-@eel.expose
-def get_json_data(data):
-    data = get_json.encode(data)
-    return data
-
-
-say_hello_py('Python World!')
-eel.say_hello_js('Python World!')   # Call a Javascript function
-
-eel.start('templates/base.html', size=(300, 200))    # Start
+    response = conn.getresponse()
+    print(response)

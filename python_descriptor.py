@@ -4,9 +4,89 @@ import logging
 from abc import ABC, abstractmethod
 from functools import wraps
 from sys import getsizeof
+import pandas as pd
+from typing import Any
 
 from custom_data_types import Matrix
 
+class Parameters:
+    def __get_attr__(self, name: str):
+        try:
+            return self.__dict__[f"_{name}"]
+        except KeyError:
+            return "The value of _{name} is not found. Try to setup this attribute."
+
+    def __set_attr__(self, name: str, value: Any):
+        self.__dict__[name] = value
+
+    def __repr__(self):
+        return str(self.__dict__)
+
+    def insert_row(self):
+        ...
+
+    def to_dataframe(self):
+        return pd.DataFrame(data={'keys': [x for x in self.__dict__.keys()], "values":[x for x in self.__dict__.values()]}, index=[x for x in range(0,len(self.__dict__))])
+
+class AdvancedDataFrame:
+    def __init__(self):
+        self.__df = pd.DataFrame()
+        self.__args = Parameters()
+        
+    @property
+    def data(self):
+        return self.__df
+
+    def __get_attr__(self, name: str):
+        try:
+            return self.__args[f"_{name}"]
+        except KeyError:
+            return "The value of _{name} is not found. Try to setup this attribute."
+
+    def __set_attr__(self, name: str, value: Any):
+        self.__args[name] = value
+
+    def __repr__(self):
+        return str({k: v for k, v in self.__dict__.items() if k not in ('_AdvancedDataFrame__args', '_AdvancedDataFrame__df')})
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __dataframe__(self):
+        return self.__df
+class Regression:
+    RUN_START_DATE: pd.DatetimeIndex
+    RUN_END_DATE: pd.DatetimeIndex
+    
+    def __init__(self, name):
+        self._df = pd.DataFrame(columns=['name', 'contact'])
+
+    @property
+    def start_date(self):
+        self._df['start_date'] = self._start_date
+        return self._df['start_date']
+
+    @start_date.setter
+    def start_date(self, value):
+        self._start_date = pd.to_datetime(value)
+
+    @start_date.getter
+    def start_date(self):
+        return self._start_date
+
+    @property
+    def end_date(self):
+        self._df['end_date'] = self._end_date
+        return self._df['end_date']
+
+    @end_date.setter
+    def end_date(self, value):
+        self._end_date = pd.to_datetime(value)
+
+    @end_date.getter
+    def end_date(self):
+        return self._end_date
+        
 class DirectorySize:
     """ Descriptor Dynamic Lookups"""
     def __get__(self, obj, objtype=None):
@@ -16,11 +96,6 @@ class Directory:
     size = DirectorySize() # Descriptor instance
     def __init__(self, dirname):
         self.dirname = dirname
-
-def find_dir_size():
-    s = Directory("src")
-    g = Directory("node_modules")
-    print(s.size)
 
 class Validator(ABC):
     """Abstract class for validate type"""
@@ -72,7 +147,6 @@ class Dimensional(Validator):
 
         if not all(x == length[0] for x in length):
             raise TypeError(f"Cannot build the matrix. Expected same length column.")
-    
 
 class LoggedAgeAccess:
     """ Descriptor Managed Attributes """
@@ -84,7 +158,6 @@ class LoggedAgeAccess:
     def __set__(self, obj, value):
         logging.info('Updating %r to %r', 'age', value)
         obj._age = value
-
 
 class LoggedAccess:
     """ Descriptor Customized Name """
@@ -100,34 +173,6 @@ class LoggedAccess:
     def __set__(self, obj, value):
         logging.info('Updating %r to %r', self.public_name, value)
         setattr(obj, self.private_name, value)
-
-class ModelValidator(ABC):
-    def __set_name__(self, owner, name):
-        self.public_name = name
-        self.private_name = "_" + name
-
-    def __get__(self, obj, objType=None):
-        value = getattr(obj, self.private_name)
-        logging.info("The object validation %r to %r is pass", self.public_name, value)
-        return value
-    
-    def __set__(self, obj, value):
-        logging.info("U")
-
-class Person:
-    age = LoggedAccess() # Descriptor instance
-    name = LoggedAccess()
-
-    def __init__(self, name, age):
-        self.name = name # Regular instance attribute
-        self.age = age # Calls __set__()
-
-    def birthday(self):
-        self.age += 1 # Calls both __get__() and __set__()
-
-def test_orm_model():
-    first_person = Person("Erfan Huda", 29)
-    assert first_person.name == "Erfan Huda"
 
 class ImmutableValidator(ABC):
     __slots__= ("name", "result")
@@ -147,25 +192,6 @@ class ImmutableValidator(ABC):
     def validate(self, value):
         if not isinstance(value, str):
             raise TypeError("Expected string but got %r", type(value))
-
-
-class Age:
-    __slots__ = ("_name", "_result")
-
-    def __init__(self, name, result=[]):
-        self._name = name
-        self._result = result
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def result(self):
-        return self._result
-
-    def validate(self, value):
-        pass
 
 def logger(func):
     import logging

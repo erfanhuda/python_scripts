@@ -25,12 +25,6 @@ class LayoutScreen(Screen):
         yield Widget()
         yield Widget()
 
-    def on_load():
-        self.bind("tab", "toogle_class('#sidebar', '-active')")
-
-    def on_mount(self):
-        self.mount(header=Widget(),content=Widget(), footer=Widget(), sidebar=Widget())
-
 class CalendarDisplay(Static):
     start_time = reactive(time)
     time = reactive(monotonic)
@@ -143,7 +137,7 @@ class TabScreen(Container):
         """Create child widgets for the app."""
         # yield ScrollableContainer(ModelSection())
         with TabbedContent("Models", initial="io"):
-            yield first_pane
+            # yield first_pane
             # with TabPane("IO", id="io"):
             #     yield first_pane
             with TabPane("Models", id="Models"):
@@ -181,7 +175,7 @@ class Main(App):
 
     BINDINGS = [("d", "toggle_dark", "Toggle dark mode")]
     TITLE = "Seabank Seacaster"
-    CSS_PATH = "./main.tcss"'
+    CSS_PATH = "./main.tcss"
 
     def compose(self) -> ComposeResult:
         yield TabScreen()
