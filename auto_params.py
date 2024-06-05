@@ -3,7 +3,6 @@ import itertools
 from typing import Optional
 from collections.abc import Iterable, Iterator
 from typing import overload
-from typing_extensions import Self, TypeAlias
 from abc import ABC
 import json
 
@@ -43,7 +42,7 @@ PRODUCT_CODE = {
 
 TENORS = {
     "SPL" : [1,3,6,12,18,24],
-    "BCL" : [3,6,12],
+    "BCL" : [2,3,6,12],
     "SCL" : [3,6,12],
     "KPL" : range(1, 181),
     "EML" : range(1, 61),
@@ -87,7 +86,7 @@ PAYMENT_FREQ = {
     "SME" : [24]}
 
 BEGINNING_DATE = {
-    "SPL" : "2021-10-31",
+    "SPL" : "2021-06-30",
     "BCL" : "2021-11-30",
     "SCL" : "2022-05-31",
     "KPL" : "",
@@ -200,8 +199,7 @@ if __name__ == "__main__":
     non_tenor_product = ["EML", "PYL", "KPL", "SME", "SCF", "UDL"]
     tenor_product = ["AKL", "APL", "EAL", "RCL"]
     product_code = ["106","107","108","109","110","111","112","115","C01","SC1","SC2","M05"]
-
-    product = "SPL"
+    product = "BCL"
     scenario = ['BASE', 'BEST', 'WORST']
     # date_range = [x for x in pd.date_range(start="2021-06-30", end="2024-02-29", freq="M").strftime("%Y/%m/%d")]
     flow_rate_matrix = ['Current - Current', 'Current - M1', 'Current - M2', 'Disburse - Current', 'Disburse - M1', 'Disburse - M2', 'M1 - M2', 'M1 - M3', 'M2 - M3', 'M2 - M4', 'M3 - M4', 'M3 - M5', 'M4 - M5', 'M4 - M6', 'M5 - M6', 'M6 - WO']
@@ -210,13 +208,15 @@ if __name__ == "__main__":
     buckets = range(1, 6)
     stage = range(1, 4)
     mob = range(1, 13)
-    date_range = pd.date_range(BEGINNING_DATE[product],"2024-04-30", freq="m", ).to_list()
+    date_range = pd.date_range(BEGINNING_DATE[product],"2024-05-31", freq="ME", ).to_list()
+    date_range2 = pd.date_range("2022-01-31","2024-05-31", freq="ME", ).to_list()
     models = ['Regional Model', 'SBID Cohort Model', 'SBID TTC YOY Model']
-    FILENAME = "./file/template/csv_ecl_disbursement_wo.csv"
+
+    FILENAME = "./file/template/csv_wo_dates.csv"
     TYPE = "ADD"
 
-    final = itertools.product(["2024-04-30"], [product], TENORS[product], date_range)
-    final = pd.DataFrame(list(final), columns=["Pt_date", "Product","Tenor", "Date"])
+    final = itertools.product([product], TENORS[product], date_range, date_range)
+    final = pd.DataFrame(list(final), columns=["product_type", "tenor","disb_month_adj", "wo_claw_adj"])
 
     if TYPE == "NEW":
         final.to_csv(mode="w", path_or_buf=FILENAME, index=False, header=True)
