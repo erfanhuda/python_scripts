@@ -1,7 +1,9 @@
+import pythonnet
+
+# pythonnet.load("coreclr", runtime_config="runtimeconfig.json")
 import clr
-from pythonnet import get_runtime_info
 
 clr.AddReference("System.Collections.Generic")
 clr.AddReference("System")
 
-print(get_runtime_info())
+print(pythonnet.get_runtime_info())
