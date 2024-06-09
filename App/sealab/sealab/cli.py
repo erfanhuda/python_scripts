@@ -3,7 +3,7 @@ from typing import Optional, List
 
 import typer
 
-from seacaster import ERRORS, __app_name__, __version__, config, database, seacaster
+from App.sealab.sealab.sealab import ERRORS, __app_name__, __version__, config, database, seacaster
 
 app = typer.Typer()
 

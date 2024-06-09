@@ -6,7 +6,7 @@ from pathlib import Path
 
 import typer 
 
-from seacaster import (
+from App.sealab.sealab.sealab import (
     DB_WRITE_ERROR, DIR_ERROR, FILE_ERROR, SUCCESS, __app_name__
 )
 

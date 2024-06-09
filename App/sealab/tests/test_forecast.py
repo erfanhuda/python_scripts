@@ -1,8 +1,9 @@
 import json
+from App.sealab.sealab import sealab
 import pytest
 from typer.testing import CliRunner
 
-from seacaster import (DB_READ_ERROR,SUCCESS,__app_name__,__version__,cli,seacaster)
+from sealab import (DB_READ_ERROR,SUCCESS,__app_name__,__version__,cli)
 
 runner = CliRunner()
 
@@ -54,7 +55,7 @@ test_data2 = {
     ],
 )
 def test_add(mock_json_file, description, priority, expected):
-    todoer = seacaster.Todoer(mock_json_file)
+    todoer = sealab.Todoer(mock_json_file)
     assert todoer.add(description, priority) == expected
     read = todoer._db_handler.read_todos()
     assert len(read.todo_list) == 2
