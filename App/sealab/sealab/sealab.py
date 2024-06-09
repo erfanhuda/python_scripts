@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any, Dict, NamedTuple, List
-from seacaster.database import DatabaseHandler
-from seacaster import DB_READ_ERROR, ID_ERROR
+from sealab.database import DatabaseHandler
+from App.sealab.sealab.sealab import DB_READ_ERROR, ID_ERROR
 
 class CurrentToDo(NamedTuple):
     todo: Dict[str, Any]

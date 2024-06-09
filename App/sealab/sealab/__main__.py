@@ -1,4 +1,4 @@
-from seacaster import cli, __app_name__
+from App.sealab.sealab.sealab import cli, __app_name__
 
 def main():
     cli.app(prog_name=__app_name__)
