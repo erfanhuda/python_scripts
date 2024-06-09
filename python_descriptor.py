@@ -6,6 +6,7 @@ from functools import wraps
 from sys import getsizeof
 import pandas as pd
 from typing import Any
+import numpy as np
 
 from custom_data_types import Matrix
 
