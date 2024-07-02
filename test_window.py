@@ -1,4 +1,3 @@
-
 import win32api
 import win32gui
 import win32con
@@ -8,7 +7,6 @@ def wndProc(hWnd, message, wParam, lParam):
         win32api.PostQuitMessage(0)
     else:
         return win32gui.DefWindowProc(hWnd, message, wParam, lParam)
-
 
 className = 'MyWindowClass'
 hInstance = win32api.GetModuleHandle()
